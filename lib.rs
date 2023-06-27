@@ -1,8 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 #[ink::contract]
 mod sobrenombre_pendiente {
-
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
 
@@ -54,8 +52,8 @@ mod sobrenombre_pendiente {
                 return false
             }else{
                 let mut i:usize;
-                let m = (self.pagos.len() - 4);
-                let j = (self.pagos.len() - 1);
+                let m = self.pagos.len() - 3;
+                let j = self.pagos.len();
                 for i in m..j{
                     if self.pagos[i].aplico_descuento || !self.pagos[i].a_tiempo{
                         return false
@@ -248,7 +246,7 @@ mod sobrenombre_pendiente {
         ///
         #[ink(constructor)]
         pub fn default() -> Self {
-            Self::new(Default::default())
+            Self::new(u128::default(), u128::default(), u128::default(), u128::default())
         }
 
         #[ink(message)]
@@ -263,11 +261,11 @@ mod sobrenombre_pendiente {
         }
 
         #[ink(message)]
-        pub fn get_recibos(&self, dni: u32) -> Result<Vec<Recibo>, ErrorCustom> {
+        pub fn get_recibos(&self, dni: u32) -> Vec<Recibo> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
                 Ok(socio.generar_recibos())
             } else {
-                Err(ErrorCustom::SocioNoEncontrado)
+                Vec::new()
             }
         }
 
