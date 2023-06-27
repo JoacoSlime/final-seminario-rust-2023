@@ -261,11 +261,11 @@ mod sobrenombre_pendiente {
         }
 
         #[ink(message)]
-        pub fn get_recibos(&self, dni: u32) -> Vec<Recibo> {
+        pub fn get_recibos(&self, dni: u32) -> Option<Vec<Recibo>> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
-                Ok(socio.generar_recibos())
+                Some(socio.generar_recibos())
             } else {
-                Vec::new()
+                None
             }
         }
 
