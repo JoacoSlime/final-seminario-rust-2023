@@ -50,7 +50,21 @@ mod sobrenombre_pendiente {
         }
 
         pub fn cumple_bonificacion(&self) -> bool {
-            todo!()
+            if self.pagos.len() < 3 {
+                return false
+            }else{
+                let mut i:usize;
+                let m = (self.pagos.len() - 4);
+                let j = (self.pagos.len() - 1);
+                for i in m..j{
+                    if self.pagos[i].aplico_descuento || !self.pagos[i].a_tiempo{
+                        return false
+                    }
+                }
+                return true
+
+            
+        }
         }
 
         pub fn cambiar_categoria(&mut self, id_categoria: u32, id_deporte: Option<u32>) {
