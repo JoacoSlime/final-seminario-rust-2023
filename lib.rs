@@ -110,18 +110,27 @@ mod sobrenombre_pendiente {
         pendiente: bool,
         a_tiempo: bool,
         aplico_descuento: bool,
+        fecha_pago: Option<Timestamp>,
+        monto_pagado: Option<u128>,
     }
     impl Pago {
         pub fn new(vencimiento:Timestamp, id_categoria: u32) -> Pago {
-            Pago { vencimiento, categoria: Categoria::new(id_categoria), pendiente: true, a_tiempo: false, aplico_descuento: false }
+            Pago { vencimiento, categoria: Categoria::new(id_categoria), pendiente: true, a_tiempo: false, aplico_descuento: false, fecha_pago: None , monto_pagado: None}
         }
     
         pub fn verificar_pago(&self, monto: u128) -> bool {
             self.categoria.mensual() == monto
         }
     
-        pub fn realizar_pago(&mut self, monto: u128) {
+        pub fn realizar_pago(&mut self, monto: u128, fecha: Timestamp) {
             todo!()
+            /*
+            > verifica el pago
+            > si es correcto el monto ingresado
+            > aplico_descuento? verificar eso
+            > poner el monto_pagado, fecha_pago, pendiente -> false
+            > a_tiempo -> true SI fecha_hoy < fecha_vencimiento
+            */
         }
     }
 
@@ -270,7 +279,7 @@ mod sobrenombre_pendiente {
         }
 
         #[ink(message)]
-        pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>) {
+        pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, id_categoria: u32, id_deporte: u32) {
             let hoy = self.env().block_timestamp() + self.duracion_deadline;
             let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy);
             self.socios.push(socio);
@@ -279,6 +288,7 @@ mod sobrenombre_pendiente {
 
         #[ink(message)]
         pub fn registrar_pago(&mut self, dni: u32, monto: u128) {
+            let hoy = self.env().block_timestamp();
             todo!()
         }
 
