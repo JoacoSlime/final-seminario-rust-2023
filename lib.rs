@@ -29,7 +29,7 @@ mod sobrenombre_pendiente {
         /// # #![allow(unused_mut)]
         /// let nuevo_socio = Socio::new("Carlos".to_string(), 44555888, 2, Some<02>);
         /// ```
-        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: u32, vencimiento:Timestamp) -> Socio {
+        pub fn new(nombre: String, dni:u32, id_categoria: Option<u32>, id_deporte: Option<u32>, vencimiento:Timestamp) -> Socio {
 
             match id_categoria {
                 3 =>
@@ -43,16 +43,20 @@ mod sobrenombre_pendiente {
             
         }
 
+        pub fn puede_hacer_deporte(&self, id_deporte: u32) -> bool {
+            todo!()
+        }
+
         pub fn generar_recibo(&self) -> Vec<Recibo> {
             todo!()
         }
 
-        pub fn cumple_bonificacion(&self) -> bool {
-            if self.pagos.len() < 3 {
+        pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
+            if self.pagos.len() < pagos_consecutivos as usize {
                 return false
             }else{
                 let mut i:usize;
-                let m = self.pagos.len() - 3;
+                let m = self.pagos.len() - pagos_consecutivos as usize;
                 let j = self.pagos.len();
                 for i in m..j{
                     if self.pagos[i].aplico_descuento || !self.pagos[i].a_tiempo{
@@ -239,6 +243,7 @@ mod sobrenombre_pendiente {
         descuento: u128,
         precio_categorias: (u128, u128, u128),
         duracion_deadline: Timestamp,
+        pagos_consecutivos_bono: u32,
     }
 
     impl SobrenombrePendiente {
