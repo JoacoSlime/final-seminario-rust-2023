@@ -1,5 +1,5 @@
 [package]
-name = "gestor_de_cobros"
+name = "club_sem_rust"
 version = "0.1.0"
 authors = ["JoacoSlime <JoacoSlime@proton.me>", "Lara Cellini <GonzaloLucchi2@gmail.com>", "Nicolás Montanari <nicomontviv@gmail.com>"]
 edition = "2021"
@@ -9,7 +9,7 @@ ink = { version = "4.2.0", default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
-club_sem_rust = { path = "club_sem_rust", default-features = false, features = ["ink-as-dependency"] }
+ink_e2e = "4.2.0"
 
 [dev-dependencies]
 ink_e2e = "4.2.0"
@@ -19,11 +19,6 @@ path = "lib.rs"
 
 [features]
 default = ["std"]
-std = [
-    "ink/std",
-    "scale/std",
-    "scale-info/std",
-    "club_sem_rust/std",
-]
+std = ["ink/std", "scale/std", "scale-info/std"]
 ink-as-dependency = []
 e2e-tests = []
