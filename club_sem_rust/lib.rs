@@ -22,11 +22,7 @@ mod club_sem_rust {
         ///
         /// Empieza con un Pago pendiente
         ///
-<<<<<<< HEAD
-        /// # Ejemplos
-=======
         /// # Ejemplo
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
         ///
         /// ```
         /// let nuevo_socio = Socio::new("Carlos".to_string(), 44555888, 2, Some<02>);
@@ -154,12 +150,8 @@ mod club_sem_rust {
             match id_categoria {
                 1 => Self::A,
                 2 => Self::B,
-<<<<<<< HEAD
-                _ => Self::C, // Fail-safe
-=======
                 3 => Self::C,
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
             }
         }
 
@@ -167,12 +159,8 @@ mod club_sem_rust {
             match id_categoria {
                 1 => Self::A,
                 2 => Self::B,
-<<<<<<< HEAD
-                _ => Self::C, // Fail-safe
-=======
                 3 => Self::C,
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
             }
         }
     
@@ -202,10 +190,7 @@ mod club_sem_rust {
     )]
     pub enum Deporte {
         Futbol,
-<<<<<<< HEAD
-=======
         Gimnasio,
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
         Basquet,
         Rugby,
         Hockey,
@@ -214,11 +199,6 @@ mod club_sem_rust {
         Paddle
     }
     impl Deporte {
-<<<<<<< HEAD
-        pub fn get_deportes() -> Vec<Deporte> {
-            vec![
-                Self::Futbol,
-=======
         /// Devuelve el vector de todos los deportes existentes.
         ///
         /// TODO: Explicación a rellenear por el implementador el método
@@ -236,7 +216,6 @@ mod club_sem_rust {
             vec![
                 Self::Futbol,
                 Self::Gimnasio,
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
                 Self::Basquet,
                 Self::Rugby,
                 Self::Hockey,
@@ -249,14 +228,6 @@ mod club_sem_rust {
         pub fn match_deporte(id_deporte: u32) -> Self {
             match id_deporte {
                 1 => Self::Futbol,
-<<<<<<< HEAD
-                2 => Self::Basquet,
-                3 => Self::Rugby,
-                4 => Self::Hockey,
-                5 => Self::Natacion,
-                6 => Self::Tenis,
-                _ => Self::Paddle,
-=======
                 2 => Self::Gimnasio,
                 3 => Self::Basquet,
                 4 => Self::Rugby,
@@ -265,7 +236,6 @@ mod club_sem_rust {
                 7 => Self::Tenis,
                 8 => Self::Paddle,
                 _ => panic!("Id del deporte inválido, revise el ID del socio."),
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
             }
         }
     }
