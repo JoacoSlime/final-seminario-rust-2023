@@ -195,7 +195,7 @@ mod club_sem_rust {
 
 
 
-    #[derive(scale::Decode, scale::Encode, Debug, Clone)]
+    #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
         feature = "std",
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
@@ -399,4 +399,7 @@ mod deporte_tests {
         assert!(resultado.is_err());
     }
 }
+<<<<<<< HEAD
 >>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
+=======
+>>>>>>> 428b5aa (Agregado trait PartialEq a Deporte.)
