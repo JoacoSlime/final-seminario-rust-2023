@@ -256,6 +256,8 @@ mod club_sem_rust {
     /// - Los precios de cada categoría.
     /// - El tiempo máximo para verificar exitosamente un pago.
     /// - La cantidad de pagos consecutivos necesarios para dar un descuento.
+    /// - El ID de las cuentas habilitadas a usar métodos que hacen escrituras.
+    /// - Un boolean que indica si el archivo está bloqueado
     #[ink(storage)]
     pub struct ClubSemRust {
         socios: Vec<Socio>,
@@ -263,6 +265,8 @@ mod club_sem_rust {
         precio_categorias: (u128, u128, u128),
         duracion_deadline: Timestamp,
         pagos_consecutivos_bono: u32,
+        cuentas_habilitadas: Vec<AccountId>,
+        esta_bloqueado: bool,
     }
 
     impl ClubSemRust {
@@ -273,11 +277,12 @@ mod club_sem_rust {
                 descuento,
                 duracion_deadline: 999,
                 precio_categorias:(precio_categoria_a, precio_categoria_b ,precio_categoria_c),
-                pagos_consecutivos_bono
+                pagos_consecutivos_bono,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false,
             }
         }
 
-        ///
         #[ink(constructor)]
         pub fn default() -> Self {
             Self::new(15, 5000, 3000, 2000, 3)
@@ -308,7 +313,6 @@ mod club_sem_rust {
             let hoy = self.env().block_timestamp() + self.duracion_deadline;
             let socio = Socio::new(nombre, dni, id_categoria, Some(id_deporte), hoy);
             self.socios.push(socio);
-            
         }
 
         #[ink(message)]
@@ -320,6 +324,26 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn get_socios(&self) -> Vec<Socio> {
             self.socios.clone()
+        }
+
+        #[ink(message)]
+        pub fn agregar_cuenta(&mut self, id: AccountId) {
+            todo!()
+        }
+
+        #[ink(message)]
+        pub fn flip_bloqueo(&mut self) {
+            todo!()
+        }
+        
+        ///
+        /// Retorna true si una cuenta está habilitada.
+        ///
+        /// Itera sobre el vector de AccountId de la estructura y devuelve true si encuentra 
+        /// una cuenta que concuerde con el id pasado por parámetro
+        ///
+        fn esta_habilitada(&self, id: AccountId) -> bool {
+            self.cuentas_habilitadas.iter().any(|account_id| *account_id == id)
         }
     }
 }
