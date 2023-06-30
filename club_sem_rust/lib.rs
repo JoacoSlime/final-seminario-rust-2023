@@ -323,8 +323,6 @@ mod club_sem_rust {
         }
     }
 }
-<<<<<<< HEAD
-=======
 
 #[cfg(test)]
 mod deporte_tests {
@@ -369,7 +367,3 @@ mod deporte_tests {
         assert!(resultado.is_err());
     }
 }
-<<<<<<< HEAD
->>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
-=======
->>>>>>> 428b5aa (Agregado trait PartialEq a Deporte.)
