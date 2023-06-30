@@ -22,7 +22,11 @@ mod club_sem_rust {
         ///
         /// Empieza con un Pago pendiente
         ///
+<<<<<<< HEAD
         /// # Ejemplos
+=======
+        /// # Ejemplo
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
         ///
         /// ```
         /// let nuevo_socio = Socio::new("Carlos".to_string(), 44555888, 2, Some<02>);
@@ -150,7 +154,12 @@ mod club_sem_rust {
             match id_categoria {
                 1 => Self::A,
                 2 => Self::B,
+<<<<<<< HEAD
                 _ => Self::C, // Fail-safe
+=======
+                3 => Self::C,
+                _ => panic!("ID de categoría inválido, por favor revise el socio."),
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
             }
         }
 
@@ -158,7 +167,12 @@ mod club_sem_rust {
             match id_categoria {
                 1 => Self::A,
                 2 => Self::B,
+<<<<<<< HEAD
                 _ => Self::C, // Fail-safe
+=======
+                3 => Self::C,
+                _ => panic!("ID de categoría inválido, por favor revise el socio."),
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
             }
         }
     
@@ -188,6 +202,10 @@ mod club_sem_rust {
     )]
     pub enum Deporte {
         Futbol,
+<<<<<<< HEAD
+=======
+        Gimnasio,
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
         Basquet,
         Rugby,
         Hockey,
@@ -196,9 +214,29 @@ mod club_sem_rust {
         Paddle
     }
     impl Deporte {
+<<<<<<< HEAD
         pub fn get_deportes() -> Vec<Deporte> {
             vec![
                 Self::Futbol,
+=======
+        /// Devuelve el vector de todos los deportes existentes.
+        ///
+        /// TODO: Explicación a rellenear por el implementador el método
+        ///
+        /// # Ejemplo
+        ///
+        /// ```
+        /// let deportes = Deporte::get_deportes();
+        /// 
+        /// assert_eq(deportes[0], Deporte::Futbol);
+        /// assert_eq(deportes[1], Deporte::Gimnasio);
+        /// assert_eq(deportes[7], Deporte::Paddle);
+        /// ```
+        pub fn get_deportes() -> Vec<Deporte> {
+            vec![
+                Self::Futbol,
+                Self::Gimnasio,
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
                 Self::Basquet,
                 Self::Rugby,
                 Self::Hockey,
@@ -211,12 +249,23 @@ mod club_sem_rust {
         pub fn match_deporte(id_deporte: u32) -> Self {
             match id_deporte {
                 1 => Self::Futbol,
+<<<<<<< HEAD
                 2 => Self::Basquet,
                 3 => Self::Rugby,
                 4 => Self::Hockey,
                 5 => Self::Natacion,
                 6 => Self::Tenis,
                 _ => Self::Paddle,
+=======
+                2 => Self::Gimnasio,
+                3 => Self::Basquet,
+                4 => Self::Rugby,
+                5 => Self::Hockey,
+                6 => Self::Natacion,
+                7 => Self::Tenis,
+                8 => Self::Paddle,
+                _ => panic!("Id del deporte inválido, revise el ID del socio."),
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
             }
         }
     }
@@ -304,3 +353,50 @@ mod club_sem_rust {
         }
     }
 }
+<<<<<<< HEAD
+=======
+
+#[cfg(test)]
+mod deporte_tests {
+    use super::club_sem_rust::Deporte;
+
+    #[test]
+    fn get_deportes_test(){
+        let esperado: Vec<Deporte> = vec![
+            Deporte::Futbol,
+            Deporte::Gimnasio,
+            Deporte::Basquet,
+            Deporte::Rugby,
+            Deporte::Hockey,
+            Deporte::Natacion,
+            Deporte::Tenis,
+            Deporte::Paddle
+        ];
+        let recibido: Vec<Deporte> = Deporte::get_deportes();
+
+        assert_eq!(esperado, recibido, "Los deportes devueltos por el enum Deporte fueron distintos a los esperados.")
+    }
+
+    fn match_deporte_test() {
+        let ids = [
+            (1, Deporte::Futbol),
+            (2, Deporte::Gimnasio),
+            (3, Deporte::Basquet),
+            (4, Deporte::Rugby),
+            (5, Deporte::Hockey),
+            (6, Deporte::Natacion),
+            (7, Deporte::Tenis),
+            (8, Deporte::Paddle),
+        ];
+        for (id, dep) in ids {
+            let esperado = dep;
+            let resultado = Deporte::match_deporte(id);
+            assert_eq!(esperado, resultado, "Error, para id {} se esperaba {:?}, y se recibió {:?}", id, esperado, resultado);
+        };
+        let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(0));
+        assert!(resultado.is_err());
+        let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(9));
+        assert!(resultado.is_err());
+    }
+}
+>>>>>>> 094aa59 (Eliminados failsafes. Agregados test de Deporte.)
