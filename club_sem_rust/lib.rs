@@ -24,24 +24,47 @@ mod club_sem_rust {
         /// Empieza con un Pago pendiente
         ///
         pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp) -> Socio {
+        //To Do: if id_categoria = 2 && Id_deporte = None -> Panics!  -L
+            let pago_inicial:Vec<Pago> = vec![Pago::new(vencimiento, id_categoria)];
             Socio {
                 id_deporte,
                 id_categoria,
                 dni,
                 nombre,
-                pagos: Vec::new(),
+                pagos: pago_inicial,
             }
             // TODO: AVISO, esta función puede ser modificada en un futuro en caso de no querer llamar a Deportes::get_deportes(id_deporte) en otras funciones. - Joaco
         }
 
+        ///
+	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte
+        ///
+        /// Recibe el id_deporte que se quiere verificar
+        ///
         pub fn puede_hacer_deporte(&self, id_deporte: u32) -> bool {
-            todo!()
+            match self.id_categoria {
+            	1 => return false,
+            	2 => {
+        			    if let Some(id_dep) = self.id_deporte {
+        				    return id_dep == id_deporte;
+    			        }else{
+        			    return false;
+        		        }
+        	        },
+        		3 => return true,
+                _ => panic!("ID de categoría inválido, por favor revise el socio."),
+    	    }
         }
 
         pub fn generar_recibo(&self) -> Vec<Recibo> {
             todo!()
         }
 
+        ///
+	    /// Consulta los pagos mas recientes del Socio y devuelve si cumple los requisitos para la bonificacion o no
+        ///
+        /// Recibe por parametro la cantidad de pagos que figuren como pagados "a tiempo" necesarios para aplicar la bonificacion
+        ///
         pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
             if self.pagos.len() < pagos_consecutivos as usize {
                 return false
@@ -57,22 +80,41 @@ mod club_sem_rust {
             }
         }
 
+        ///
+	    /// Permite al usuario cambiar su propia categoria
+        ///
+        /// Si el id_categoria y/o id_deporte ingresados son invalidos, no guarda ningun cambio y se genera un panic
+        ///
         pub fn cambiar_categoria(&mut self, id_categoria: u32, id_deporte: Option<u32>) {
+            //To Do: if id_categoria = 2 && Id_deporte = None -> Panics!  -L
             self.id_categoria = id_categoria;
             self.id_deporte = id_deporte;
         }
 
+        ///
+	    /// Devuelve todos los deportes que realiza un determinado Socio
+        ///
+        /// Si es de categoria 1 devuelve None
+        ///
         pub fn get_mi_deporte(&self) -> Option<Vec<Deporte>>{
             // Arreglado para derivar lógica (Probablemente haya que modificarlo, pero al menos ahora compila (?) - Joaco
-            if let Some(id) = self.id_deporte {
+            /*if let Some(id) = self.id_deporte {
                 Categoria::match_categoria(self.id_categoria).get_deporte(id)
             } else {
                 None
             }
+            */
+            
+            //propongo algo similar a la fn puede_hacer_deporte(...) -L
+            match self.id_categoria {
+                1 => return None,
+                2 => Categoria::match_categoria(self.id_categoria).get_deporte(self.id_deporte),
+                3 => return Categoria::match_categoria(self.id_categoria).get_deporte(None),
+                _ => panic!("ID de categoría inválido, por favor revise el socio."),
+            }
         }
-    }
-
     
+    }
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -90,7 +132,7 @@ mod club_sem_rust {
         pub fn new(nombre: String, dni:u32, monto:u128, categoria:Categoria, fecha:Timestamp) -> Recibo {
             Recibo { nombre, dni, monto, categoria, fecha, }
         }
-        //o, recibe id_categoria y lo matchea con un tipo categoria 
+        //o, recibe id_categoria y lo matchea con un tipo categoria -L
     }
 
 
@@ -114,11 +156,11 @@ mod club_sem_rust {
             Pago { vencimiento, categoria: Categoria::new(id_categoria), pendiente: true, a_tiempo: false, aplico_descuento: false, fecha_pago: None , monto_pagado: None}
         }
     
-        pub fn verificar_pago(&self, monto: u128) -> bool {
-            self.categoria.mensual() == monto
+        pub fn verificar_pago(&self, monto: u128, precio_categorias: Vec<u128>) -> bool {
+            self.categoria.mensual(precio_categorias) == monto
         }
     
-        pub fn realizar_pago(&mut self, monto: u128, fecha: Timestamp) {
+        pub fn realizar_pago(&mut self, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>) {
             todo!()
             /*
             > verifica el pago
@@ -159,25 +201,39 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
-    
-        pub fn get_deporte(&self, id_deporte: u32) -> Option<Vec<Deporte>> {
+
+        ///
+        /// Consulta y devuelve el deporte que le corresponde categoria
+        ///
+        /// Recibe por parametro un Option<u32> del id_deporte
+        ///
+        pub fn get_deporte(&self, id_deporte: Option<u32>) -> Option<Vec<Deporte>> {
             match self {
                 Self::A => Some(Deporte::get_deportes()),
-                Self::B => Some(vec![Deporte::match_deporte(id_deporte)]),
+                Self::B => {
+                    if let Some(id) = id_deporte {
+                        Some(vec![Deporte::match_deporte(id)])
+                    }else{
+                        None //o panic! ? -L
+                    }
+                },
                 Self::C => None,
             }
         }
-    
-        pub fn mensual(&self) -> u128 {
+
+        ///  
+        /// Consulta y devuelve el precio de la categoria
+        ///
+        /// Recibe por parametro la lista de precios, el indice se corresponde con el precio correspondiente a la categoria
+        ///
+        pub fn mensual(&self, precio_categorias: Vec<u128>) -> u128 {
             match self {
-                Categoria::A => 5000,
-                Categoria::B => 3000,
-                Categoria::C => 2000,
+                Categoria::A => precio_categorias[0],
+                Categoria::B => precio_categorias[1],
+                Categoria::C => precio_categorias[2],
             }
         }
     }
-
-
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -251,7 +307,7 @@ mod club_sem_rust {
     pub struct ClubSemRust {
         socios: Vec<Socio>,
         descuento: u128,
-        precio_categorias: (u128, u128, u128),
+        precio_categorias: Vec<u128>,
         duracion_deadline: Timestamp,
         pagos_consecutivos_bono: u32,
         cuentas_habilitadas: Vec<AccountId>,
@@ -265,7 +321,7 @@ mod club_sem_rust {
                 socios: Vec::new(),
                 descuento,
                 duracion_deadline,
-                precio_categorias:(precio_categoria_a, precio_categoria_b ,precio_categoria_c),
+                precio_categorias:vec![precio_categoria_a, precio_categoria_b ,precio_categoria_c],
                 pagos_consecutivos_bono,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false,
@@ -278,6 +334,25 @@ mod club_sem_rust {
             Self::new(15, 864000000, 5000, 3000, 2000, 3)
         }
 
+        /// Setea un nuevo precio de matricula mensual para cierta categoria.
+        ///
+        /// Si el id_categoria pasado por parametro es invalido, no genera ningun cambio y ocurre un Panic!
+        ///
+        #[ink(message)]
+        pub fn set_precio_categoria(&mut self, p_categoria: u128, id_categoria: u32) {
+        	if id_categoria > 0 && id_categoria < 4 {
+                    let i = id_categoria-1;
+            		self.precio_categorias[i as usize] = p_categoria;
+        	}else{
+            		todo!(); //panics! -L
+        	}
+        }
+
+        ///
+	    /// Setea una nueva duracion de deadline
+        ///
+        /// Si se modifica este atributo, las fechas de vencimiento a futuro tambien se correran
+        ///
         #[ink(message)]
         pub fn set_duracion_deadline(&mut self, d_deadline: Timestamp) {
             self.duracion_deadline = d_deadline;
@@ -288,9 +363,18 @@ mod club_sem_rust {
             self.duracion_deadline
         }
 
+        ///
+	    /// Setea un porcentaje de descuento para los usuarios a los que aplica la bonificacion
+        ///
+        /// Si se ingresa un porcentaje mayor a 100 o menor que 1, panics
+        ///
         #[ink(message)]
         pub fn set_descuento(&mut self, descuento: u128) {
-            self.descuento = descuento;
+        	if descuento > 0 && descuento < 101  {
+            		self.descuento = descuento;
+        	}else{
+            		todo!() // panics!
+        	}
         }
 
         
