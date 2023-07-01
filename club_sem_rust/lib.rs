@@ -635,3 +635,67 @@ mod club_sem_rust {
     }
 
 }
+#[cfg(test)]
+mod categoria_tests {
+    use super::club_sem_rust::Categoria;
+    //CATEGORIA TEST
+#[test]
+fn match_categoria_test(){
+    let categA = Categoria::new(1);
+    let categB = Categoria::new(2);
+    let categC = Categoria::new(3);
+
+    assert_eq!(categA.match_categoria(1),Categoria::A);
+    assert_eq!(categB.match_categoria(2),Categoria::B);
+    assert_eq!(categC.match_categoria(3),Categoria::C);
+
+    assert_ne!(categA.match_categoria(1),Categoria::B);
+    assert_ne!(categB.match_categoria(2),Categoria::C);
+    assert_ne!(categC.match_categoria(3),Categoria::A);
+
+}
+
+#[test]
+fn get_deporte_test(){
+    let categA = Categoria::new(1);
+    let categB = Categoria::new(2);
+    let categC = Categoria::new(3);
+    
+    assert_eq!(categA.get_deporte(None),Some(Vec<Deporte>));
+    for i in 1..9{
+        assert_eq!(categB.get_deporte(i),Some(Vec[i]));
+    }
+    
+    assert_eq!(categC.get_deporte(None),None);
+    assert_ne!(categC.get_deporte(3), Some(Vec[i]));
+}
+#[test]
+fn mensual_test(){
+    let categA = Categoria::new(1);
+    let categB = Categoria::new(2);
+    let categC:Categoria = Categoria::new(3);
+    let mut valores = Vec::new();
+    valores.push(5000);
+    valores.push(3000);
+    valores.push(2000);
+
+    assert_eq!(categA.mensual(valores),5000);
+    assert_eq!(categB.mensual(valores),3000);
+    assert_eq!(categC.mensual(valores),2000);
+
+    assert_ne!(categA.mensual(valores),2000);
+    assert_ne!(categB.mensual(valores),5000);
+    assert_ne!(categC.mensual(valores),3000);
+}
+#[test]
+#[should_panic]
+fn test_panic() {
+    let categD = Categoria::new(4);
+
+    let categA = Categoria::new(1);
+    let vacio = Vec::new();
+    categA.mensual(vacio);
+
+}
+
+}
