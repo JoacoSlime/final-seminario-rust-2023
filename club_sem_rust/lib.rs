@@ -56,8 +56,25 @@ mod club_sem_rust {
     	    }
         }
 
-        pub fn generar_recibo(&self) -> Vec<Recibo> {
-            todo!()
+         //El metodo generar_recibos recorre los pagos y en caso de que no figure como pendiente crea el recibo y lo agrega al vec de recibos
+        pub fn generar_recibos(&self) -> Vec<Recibo> {
+            let recibos = Vec::new();
+            if self.pagos.len() != 0 {
+             
+                for i in 0..self.pagos.len(){
+                    if self.pagos[i].pendiente = false{
+                        match self.pagos[i].fecha_pago{
+                            Some(fe) =>{
+                        let recibo = Recibo::new(self.nombre, self.dni, self.pagos[i].monto_pagado, self.id_categoria, fe );
+                        recibos.push(recibo);
+                    },
+                    None => panic!("ESTE SOCIO REGISTRA UN PAGO SIN FECHA")
+                    }
+                    }
+                }
+               
+            }
+            return recibos
         }
 
         ///
