@@ -490,7 +490,7 @@ mod club_sem_rust {
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 25,
-                precio_categorias: (400, 300, 200),
+                precio_categorias: vec![400, 300, 200],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 10,
                 cuentas_habilitadas: Vec::new(),
@@ -506,7 +506,7 @@ mod club_sem_rust {
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
-                precio_categorias: (5000, 3000, 2000),
+                precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864000000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
@@ -523,13 +523,13 @@ mod club_sem_rust {
             let club = ClubSemRust::default();
             let resultado = club.get_duracion_deadline();
 
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
 
             let esperado = 999; 
             let club = ClubSemRust::new(25, 999, 400, 300, 200, 10);
             let resultado = club.get_duracion_deadline();
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
         }
 
         #[test]
@@ -537,16 +537,16 @@ mod club_sem_rust {
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
-                precio_categorias: (5000, 3000, 2000),
+                precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
-            let mut club = ClubSemRust::default();
-            club.set_duracion_deadline(999);
+            let mut resultado = ClubSemRust::default();
+            resultado.set_duracion_deadline(999);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
         }
 
         #[test]
@@ -555,13 +555,13 @@ mod club_sem_rust {
             let club = ClubSemRust::default();
             let resultado = club.get_descuento();
 
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
 
             let esperado = 25; 
             let club = ClubSemRust::new(25, 999, 400, 300, 200, 10);
             let resultado = club.get_descuento();
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
         }
 
         #[test]
@@ -569,16 +569,16 @@ mod club_sem_rust {
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 25,
-                precio_categorias: (5000, 3000, 2000),
+                precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
-            let mut club = ClubSemRust::default();
-            club.set_descuento(25);
+            let mut resultado = ClubSemRust::default();
+            resultado.set_descuento(25);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
         }
 
         #[test]
@@ -592,16 +592,16 @@ mod club_sem_rust {
                     pagos: Vec::new(),
                 }]),
                 descuento: 15,
-                precio_categorias: (5000, 3000, 2000),
+                precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864000000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
-            let mut club = ClubSemRust::default();
-            club.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
+            let mut resultado = ClubSemRust::default();
+            resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
 
             
             let esperado = ClubSemRust{
@@ -619,7 +619,7 @@ mod club_sem_rust {
                     pagos: Vec::new(),
                 }]),
                 descuento: 15,
-                precio_categorias: (5000, 3000, 2000),
+                precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864000000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
@@ -629,73 +629,74 @@ mod club_sem_rust {
             club.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
             club.registrar_nuevo_socio("Roberto".to_string(), 45045045, 2, Some(5));
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}, esperado, resultado");
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
         }
         
+
     }
 
-}
-#[cfg(test)]
-mod categoria_tests {
-    use super::club_sem_rust::Categoria;
-    //CATEGORIA TEST
-#[test]
-fn match_categoria_test(){
-    let categA = Categoria::new(1);
-    let categB = Categoria::new(2);
-    let categC = Categoria::new(3);
+    #[cfg(test)]
+    mod categoria_tests {
+        use crate::club_sem_rust::Categoria;
 
-    assert_eq!(categA.match_categoria(1),Categoria::A);
-    assert_eq!(categB.match_categoria(2),Categoria::B);
-    assert_eq!(categC.match_categoria(3),Categoria::C);
+        //CATEGORIA TEST
+        #[test]
+        fn match_categoria_test(){
+            let categA = Categoria::new(1);
+            let categB = Categoria::new(2);
+            let categC = Categoria::new(3);
 
-    assert_ne!(categA.match_categoria(1),Categoria::B);
-    assert_ne!(categB.match_categoria(2),Categoria::C);
-    assert_ne!(categC.match_categoria(3),Categoria::A);
+            assert_eq!(categA.match_categoria(1),Categoria::A);
+            assert_eq!(categB.match_categoria(2),Categoria::B);
+            assert_eq!(categC.match_categoria(3),Categoria::C);
 
-}
+            assert_ne!(categA.match_categoria(1),Categoria::B);
+            assert_ne!(categB.match_categoria(2),Categoria::C);
+            assert_ne!(categC.match_categoria(3),Categoria::A);
 
-#[test]
-fn get_deporte_test(){
-    let categA = Categoria::new(1);
-    let categB = Categoria::new(2);
-    let categC = Categoria::new(3);
-    
-    assert_eq!(categA.get_deporte(None),Some(Vec<Deporte>));
-    for i in 1..9{
-        assert_eq!(categB.get_deporte(i),Some(Vec[i]));
+        }
+
+        #[test]
+        fn get_deporte_test(){
+            let categA = Categoria::new(1);
+            let categB = Categoria::new(2);
+            let categC = Categoria::new(3);
+            
+            assert_eq!(categA.get_deporte(None),Some(Vec<Deporte>));
+            for i in 1..9{
+                assert_eq!(categB.get_deporte(i),Some(Vec[i]));
+            }
+            
+            assert_eq!(categC.get_deporte(None),None);
+            assert_ne!(categC.get_deporte(3), Some(Vec[i]));
+        }
+        #[test]
+        fn mensual_test(){
+            let categA = Categoria::new(1);
+            let categB = Categoria::new(2);
+            let categC:Categoria = Categoria::new(3);
+            let mut valores = Vec::new();
+            valores.push(5000);
+            valores.push(3000);
+            valores.push(2000);
+
+            assert_eq!(categA.mensual(valores),5000);
+            assert_eq!(categB.mensual(valores),3000);
+            assert_eq!(categC.mensual(valores),2000);
+
+            assert_ne!(categA.mensual(valores),2000);
+            assert_ne!(categB.mensual(valores),5000);
+            assert_ne!(categC.mensual(valores),3000);
+        }
+        #[test]
+        #[should_panic]
+        fn test_panic() {
+            let categD = Categoria::new(4);
+
+            let categA = Categoria::new(1);
+            let vacio = Vec::new();
+            categA.mensual(vacio);
+
+        }
     }
-    
-    assert_eq!(categC.get_deporte(None),None);
-    assert_ne!(categC.get_deporte(3), Some(Vec[i]));
-}
-#[test]
-fn mensual_test(){
-    let categA = Categoria::new(1);
-    let categB = Categoria::new(2);
-    let categC:Categoria = Categoria::new(3);
-    let mut valores = Vec::new();
-    valores.push(5000);
-    valores.push(3000);
-    valores.push(2000);
-
-    assert_eq!(categA.mensual(valores),5000);
-    assert_eq!(categB.mensual(valores),3000);
-    assert_eq!(categC.mensual(valores),2000);
-
-    assert_ne!(categA.mensual(valores),2000);
-    assert_ne!(categB.mensual(valores),5000);
-    assert_ne!(categC.mensual(valores),3000);
-}
-#[test]
-#[should_panic]
-fn test_panic() {
-    let categD = Categoria::new(4);
-
-    let categA = Categoria::new(1);
-    let vacio = Vec::new();
-    categA.mensual(vacio);
-
-}
-
 }
