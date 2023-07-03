@@ -347,8 +347,8 @@ mod club_sem_rust {
 
         #[ink(constructor)]
         pub fn default() -> Self {
-            // 864000000 es 10 días 
-            Self::new(15, 864000000, 5000, 3000, 2000, 3)
+            // 864_000_000 es 10 días 
+            Self::new(15, 864_000_000, 5000, 3000, 2000, 3)
         }
 
         /// Setea un nuevo precio de matricula mensual para cierta categoria.
@@ -453,9 +453,18 @@ mod club_sem_rust {
 
     
 
+    pub fn get_current_time() -> Timestamp {
+        let since_the_epoch = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("Time went backwards");
+        since_the_epoch.as_secs()
+            + since_the_epoch.subsec_nanos() as u64 / 1_000_000_000
+    }
+    
     #[cfg(test)]
     mod deporte_tests {
         use crate::club_sem_rust::Deporte;
+        
 
         #[test]
         fn get_deportes_test(){
@@ -499,8 +508,7 @@ mod club_sem_rust {
 
     #[cfg(test)]
     mod club_sem_rust_tests {
-        use crate::club_sem_rust::ClubSemRust;
-        use crate::club_sem_rust::Socio;
+        use crate::club_sem_rust::*;
 
         #[test]
         fn new_test(){
@@ -524,7 +532,7 @@ mod club_sem_rust {
                 socios: Vec::new(),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
-                duracion_deadline: 864000000,
+                duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
@@ -536,17 +544,17 @@ mod club_sem_rust {
 
         #[test]
         fn get_duracion_deadline_test() {
-            let esperado = 864000000;
+            let esperado = 864_000_000;
             let club = ClubSemRust::default();
             let resultado = club.get_duracion_deadline();
 
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
 
             let esperado = 999; 
             let club = ClubSemRust::new(25, 999, 400, 300, 200, 10);
             let resultado = club.get_duracion_deadline();
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
         #[test]
@@ -563,7 +571,7 @@ mod club_sem_rust {
             let mut resultado = ClubSemRust::default();
             resultado.set_duracion_deadline(999);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
         #[test]
@@ -572,13 +580,13 @@ mod club_sem_rust {
             let club = ClubSemRust::default();
             let resultado = club.get_descuento();
 
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
 
             let esperado = 25; 
             let club = ClubSemRust::new(25, 999, 400, 300, 200, 10);
             let resultado = club.get_descuento();
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
         #[test]
@@ -595,7 +603,7 @@ mod club_sem_rust {
             let mut resultado = ClubSemRust::default();
             resultado.set_descuento(25);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
         #[test]
@@ -610,7 +618,7 @@ mod club_sem_rust {
                 }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
-                duracion_deadline: 864000000,
+                duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
@@ -618,7 +626,7 @@ mod club_sem_rust {
             let mut resultado = ClubSemRust::default();
             resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
 
             
             let esperado = ClubSemRust{
@@ -637,19 +645,211 @@ mod club_sem_rust {
                 }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
-                duracion_deadline: 864000000,
+                duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
-            let mut club = ClubSemRust::default();
-            club.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
-            club.registrar_nuevo_socio("Roberto".to_string(), 45045045, 2, Some(5));
+            let mut resultado = ClubSemRust::default();
+            resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
+            resultado.registrar_nuevo_socio("Roberto".to_string(), 45045045, 2, Some(5));
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}, esperado, resultado", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+        }
+        
+        #[ink::test]
+        fn registrar_pago_test() {
+            let esperado = ClubSemRust{
+                socios: Vec::from([Socio{
+                    id_deporte: None,
+                    id_categoria: 3,
+                    dni: 44044044,
+                    nombre: "Juancito".to_string(),
+                    pagos: Vec::from([
+                        Pago::new(super::get_current_time(), 2000)
+                    ]),
+                }]),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            let mut resultado = ClubSemRust::default();
+            resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
+            resultado.registrar_pago(44044044, 2000);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+        }
+
+        #[test]
+        fn get_socios_test() {
+            let esperado = Vec::from([Socio{
+                id_deporte: None,
+                id_categoria: 3,
+                dni: 44044044,
+                nombre: "Juancito".to_string(),
+                pagos: Vec::from([
+                    Pago::new(super::get_current_time(), 2000)
+                ]),
+            }, Socio{
+                id_deporte: Some(5),
+                id_categoria: 3,
+                dni: 45045045,
+                nombre: "Roberto".to_string(),
+                pagos: Vec::new(),
+            }]);
+            let club = ClubSemRust{
+                socios: Vec::from([Socio{
+                    id_deporte: None,
+                    id_categoria: 3,
+                    dni: 44044044,
+                    nombre: "Juancito".to_string(),
+                    pagos: Vec::from([
+                        Pago::new(super::get_current_time(), 2000)
+                    ]),
+                }]),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            let resultado = club.get_socios();
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_socios(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+        }
+
+        #[test]
+        fn get_recibos_test() {
+            let now = super::get_current_time();
+
+            let esperado = Vec::from([
+                Recibo {
+                    nombre: "Juancito".to_string(),
+                    dni: 44044044,
+                    monto: 5000,
+                    categoria: Categoria::A,
+                    fecha: now,
+                },
+                Recibo {
+                    nombre: "Juancito".to_string(),
+                    dni: 44044044,
+                    monto: 2000,
+                    categoria: Categoria::C,
+                    fecha: now + 1_000_000,
+                },
+            ]);
+            let club = ClubSemRust{
+                socios: Vec::from([Socio{
+                    id_deporte: None,
+                    id_categoria: 3,
+                    dni: 44044044,
+                    nombre: "Juancito".to_string(),
+                    pagos: Vec::from([
+                        Pago{
+                            vencimiento: now + 1_000_000,
+                            categoria: Categoria::A,
+                            pendiente: false,
+                            a_tiempo: true,
+                            aplico_descuento: true,
+                            fecha_pago: Some(now),
+                            monto_pagado: Some(5000),
+                        },
+                        Pago{
+                            vencimiento: now + 5_000_000,
+                            categoria: Categoria::C,
+                            pendiente: false,
+                            a_tiempo: true,
+                            aplico_descuento: true,
+                            fecha_pago: Some(now + 1_000_000),
+                            monto_pagado: Some(2000),
+                        }
+                    ])
+                }, Socio{
+                    id_deporte: Some(5),
+                    id_categoria: 3,
+                    dni: 45045045,
+                    nombre: "Roberto".to_string(),
+                    pagos: Vec::new(),
+                }]),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            let resultado = club.get_recibos(44044044);
+            assert!(resultado.is_some());
+            assert_eq!(esperado, resultado.unwrap(), "Error en ClubSemRust::get_recibos(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+
+            
+            let resultado = club.get_recibos(45045045);
+            assert!(resultado.is_none(), "Error en ClubSemRust::get_recibos(), se esperaba None y se recibió {:?}", resultado);
+        }
+
+        #[test]
+        fn agregar_cuenta_test() {
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let esperado = ClubSemRust{
+                socios: Vec::new(),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::from([
+                    accounts.alice,
+                    accounts.bob,
+                    ]),
+                esta_bloqueado: false
+            };
+            let mut resultado = ClubSemRust::default();
+            assert_ne!(resultado, esperado);
+            resultado.agregar_cuenta(accounts.alice);
+            assert_ne!(resultado, esperado);
+            resultado.agregar_cuenta(accounts.bob);
+            assert_eq!(resultado, esperado, "Error en ClubSemRust::agregar_cuenta(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
         
 
+        #[test]
+        fn flip_bloqueo_test(){
+            let esperado = ClubSemRust{
+                socios: Vec::new(),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: true
+            };
+            let mut resultado = ClubSemRust::default();
+            assert_ne!(resultado, esperado);
+            resultado.flip_bloqueo();
+            assert_eq!(resultado, esperado, "Error en ClubSemRust::flip_bloqueo(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            
+        }
+
+        #[test]
+        fn esta_habilitada(){
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let club = ClubSemRust{
+                socios: Vec::new(),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::from([
+                    accounts.alice,
+                    accounts.bob,
+                    ]),
+                esta_bloqueado: false
+            };
+            assert!(!club.esta_habilitada(accounts.charlie));
+            assert!(club.esta_habilitada(accounts.alice));
+            assert!(club.esta_habilitada(accounts.bob));
+        }
     }
 
     #[cfg(test)]
@@ -663,7 +863,7 @@ mod club_sem_rust {
             let categB = Categoria::new(2);
             let categC = Categoria::new(3);
 
-            assert_eq!(categA.match_categoria(1),Categoria::A);
+            assert_eq!(Categoria::match_categoria(categA, 1),Categoria::A);
             assert_eq!(categB.match_categoria(2),Categoria::B);
             assert_eq!(categC.match_categoria(3),Categoria::C);
 
