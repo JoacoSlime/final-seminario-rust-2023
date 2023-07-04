@@ -433,7 +433,7 @@ mod club_sem_rust {
         	if descuento > 0 && descuento < 101  {
             		self.descuento = descuento;
         	}else{
-            		todo!() // panics!
+            		panic!("EL PORCENTAJE DE DESCUENTO INGRESADO ESTÁ MAL!"); // panics!
         	}
         }
 
