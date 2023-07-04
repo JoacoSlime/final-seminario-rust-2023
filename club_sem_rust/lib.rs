@@ -238,21 +238,42 @@ mod club_sem_rust {
     impl Pago {
         /// Construye un nuevo Pago.
         /// 
-        /// Puede llegar a dar panic por Categoria::new(id_categoria).
+        /// # Panics
         /// 
+        /// Puede llegar a dar panic:
+        /// - Si la id_categoria es inválida.
+        /// - Si el numero de la multiplicación es demasiado grande al aplicar el descuento.    
+        /// 
+        /// # Ejemplo
         /// ```
         /// let pago = Pago::new(u64::default(), 1);
         /// ```
         /// 
-        pub fn new(vencimiento:Timestamp, id_categoria: u32) -> Pago {
+        pub fn new(vencimiento:Timestamp, id_categoria: u32,
+             descuento: Option<u128>, precio_categorias: Vec<u128>) -> Pago {
+            let categoria = Categoria::new(id_categoria);
+            let precio_categorias = if let Some(descuento) = descuento {
+                let mut nuevos_precios = Vec::with_capacity(3);
+                for i in 0..nuevos_precios.len() {
+                    let multiplicado = (precio_categorias[i]).checked_mul(descuento);
+                    if let Some(multiplicado) = multiplicado {
+                        nuevos_precios[i] = multiplicado.checked_div(100).expect("La división causó un overflow.");
+                    } else {
+                        panic!("La multiplicación causó un overflow.")
+                    }
+                };
+                nuevos_precios
+            } else {
+                precio_categorias
+            };
             Pago {
                 vencimiento,
-                categoria: Categoria::new(id_categoria),
+                categoria,
+                monto: categoria.mensual(precio_categorias),
                 pendiente: true,
                 a_tiempo: false,
-                aplico_descuento: false,
+                aplico_descuento: descuento.is_some(),
                 fecha_pago: None,
-                monto_pagado: None // Cambiar a monto a pagar
             }
         }
 
@@ -261,6 +282,7 @@ mod club_sem_rust {
         /// 
         /// Un pago se considera "moroso" en caso de que esté vencido e impago.
         /// 
+        /// # Ejemplo
         /// ```
         /// let pago = Pago::new(u64::default(), 1);
         /// assert!(pago.es_moroso(u64::default() + 1));
@@ -269,34 +291,11 @@ mod club_sem_rust {
             self.pendiente && self.vencimiento < now
         }
         
-        /// Retorna true en caso de que el monto sea exactamente igual al que debe pagarse.
-        /// 
-        /// Aplica el descuento (si es que existe) sobre los precios, luego compara el monto con el precio de la categoría correspondiente.  
-        /// 
-        /// ```
-        /// let pago = Pago::new(u64::default(), 1);
-        /// let precio_categorias = Vec::from([5000,3000,2000]);
-        /// let descuento = Some(10)
-        /// assert!(pago.verificar_pago(4500, descuento)); 
-        /// ```
-        pub fn verificar_pago(&self, monto: u128, precio_categorias: Vec<u128>, descuento: Option<u128>) -> bool {
-            let precio_categorias: Vec<u128> = if let Some(descuento) = descuento {
-                let mut precio_categorias = precio_categorias;
-                for p in &mut precio_categorias {
-                    *p =  *p - *p * (descuento / 100)
-                };
-                precio_categorias
-            } else {
-                precio_categorias
-            };
-            self.categoria.mensual(precio_categorias) == monto
-        }
-    
-        
         /// Cambia el estado de un pago a pagado si es válido.
         /// 
         /// Verifica que el monto a pagar sea el correcto y que el pago esté pendiente, luego camabia el estado del pago a pagado. 
         /// 
+        /// # Ejemplo
         /// ```
         /// let pago = Pago::new(u64::default()+1, 1);
         /// let precio_categorias = Vec::from([5000,3000,2000]);
@@ -305,10 +304,9 @@ mod club_sem_rust {
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>) {
             if !self.pendiente {
                 panic!("El pago no está pendiente.");
-            } else if !self.verificar_pago(monto, precio_categorias, descuento) {
+            } else if !self.monto == monto {
                 panic!("Monto incorrecto.");
             } else {
-                self.monto_pagado = Some(monto);
                 self.fecha_pago = Some(fecha);
                 self.pendiente = false;
                 if descuento.is_some() {
