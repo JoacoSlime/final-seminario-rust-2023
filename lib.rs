@@ -16,12 +16,22 @@ mod gestor_de_cobros {
         }
 
         #[ink(message)]
+<<<<<<< HEAD
          pub fn socios_morosos(&self ) -> Vec<Socio> {
             let hoy = self.env().block_timestamp();
             let socios = self.club_sem_rust.get_socios();
              let iter = socios.iter();
              iter.filter(|s| s.es_moroso(hoy)).collect()
         }
+=======
+        pub fn socios_morosos(&self, id_deporte: u32) -> bool {
+            todo!()
+        }
+
+        /// 
+        /// Retorna un vector con los socios no morosos que pueden concurrir a un deporte específico.
+        /// 
+>>>>>>> 4f7bd41 (Añadido documentación a socios_no_morosos(). Revertidas primeras lineas del nuevo contrato .)
         #[ink(message)]
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
             let socios = self.club_sem_rust.get_socios();
@@ -33,6 +43,7 @@ mod gestor_de_cobros {
         }
 
         #[ink(message)]
+<<<<<<< HEAD
         pub fn recaudación(&self) -> Vec<u128> {
             let socios:Vec<Socio> = self.club_sem_rust.get_socios();
             let mut vec_recaudacion:Vec<u128> = Vec::new();
@@ -58,6 +69,10 @@ mod gestor_de_cobros {
 
 
             return vec_recaudacion;
+=======
+        pub fn recaudación(&self) -> bool {
+            todo!()
+>>>>>>> 4f7bd41 (Añadido documentación a socios_no_morosos(). Revertidas primeras lineas del nuevo contrato .)
         }
     }
 }
