@@ -15,12 +15,12 @@ mod gestor_de_cobros {
         }
 
         #[ink(message)]
-         pub fn socios_morosos(&self, id_deporte: u32) -> Vec<Socio> {
+         pub fn socios_morosos(&self ) -> Vec<Socio> {
+            let hoy = self.env().block_timestamp();
             let socios = self.club_sem_rust.get_socios();
              let iter = socios.iter();
-             iter.filter(|s| s.es_moroso()).collect()
+             iter.filter(|s| s.es_moroso(hoy)).collect()
         }
-
         #[ink(message)]
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
             let socios = self.club_sem_rust.get_socios();
