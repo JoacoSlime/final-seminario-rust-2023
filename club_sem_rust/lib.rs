@@ -24,18 +24,24 @@ mod club_sem_rust {
         /// Empieza con un Pago pendiente
         ///
         pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp) -> Socio {
-        //To Do: if id_categoria = 2 && Id_deporte = None -> Panics!  -L
-            let pago_inicial:Vec<Pago> = vec![Pago::new(vencimiento, id_categoria)];
-            Socio {
-                id_deporte,
-                id_categoria,
-                dni,
-                nombre,
-                pagos: pago_inicial,
+            if id_categoria == 2 && id_deporte == None{
+                panic!("Categoria B debe elegir un deporte");
+            }else{
+                if id_categoria == 1 || id_categoria == 3 && id_deporte != None{
+                    panic!("Categoria A y Categoria C no deben elegir un deporte  -- Este campo debe permanecer vacio");
+                }else{
+                    let pago_inicial:Vec<Pago> = vec![Pago::new(vencimiento, id_categoria)];
+                    Socio {
+                        id_deporte,
+                        id_categoria,
+                        dni,
+                        nombre,
+                        pagos: pago_inicial,
+                    }
+                }
             }
             // TODO: AVISO, esta función puede ser modificada en un futuro en caso de no querer llamar a Deportes::get_deportes(id_deporte) en otras funciones. - Joaco
         }
-
         ///
 	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte
         ///
@@ -43,38 +49,62 @@ mod club_sem_rust {
         ///
         pub fn puede_hacer_deporte(&self, id_deporte: u32) -> bool {
             match self.id_categoria {
-            	1 => return false,
-            	2 => {
-        			    if let Some(id_dep) = self.id_deporte {
-        				    return id_dep == id_deporte;
-    			        }else{
-        			    return false;
-        		        }
-        	        },
-        		3 => return true,
+            	1 => return true,
+            	2 => match id_deporte{
+                        2 => return true,   //si el id es gimnasio, Categoria B deberia devolver true
+                        _=> if let Some(id_dep) = self.id_deporte { //si no es gimnasio, chequear que coincida
+                                return id_dep == id_deporte;
+                            }else{
+                                return false;
+                            },
+                    },
+        		3 => match id_deporte{
+                        2 => return true,   //si el id es gimnasio, Categoria C deberia devolver true
+                        _=> return false,
+                    },
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
     	    }
         }
-
-         //El metodo generar_recibos recorre los pagos y en caso de que no figure como pendiente crea el recibo y lo agrega al vec de recibos
-        pub fn generar_recibos(&self) -> Vec<Recibo> {
-            let recibos = Vec::new();
+        //El metodo generar_recibos recorre los pagos y en caso de que no figure como pendiente crea el recibo y lo agrega al vec de recibos
+        pub fn generar_recibos(&mut self) -> Vec<Recibo> {
+            let mut recibos = Vec::new();
             if self.pagos.len() != 0 {
-             
                 for i in 0..self.pagos.len(){
-                    if self.pagos[i].pendiente = false{
+                    if self.pagos[i].pendiente == false{
                         match self.pagos[i].fecha_pago{
-                            Some(fe) =>{
-                        let recibo = Recibo::new(self.nombre, self.dni, self.pagos[i].monto_pagado, self.id_categoria, fe );
-                        recibos.push(recibo);
-                    },
-                    None => panic!("ESTE SOCIO REGISTRA UN PAGO SIN FECHA")
-                    }
+                            Some(fe) => {
+                                if let Some(monto_pagado) = self.pagos[i].monto_pagado {
+                                let recibo = Recibo::new(self.nombre, self.dni, monto_pagado, self.id_categoria, fe );
+                                recibos.push(recibo);
+                                }
+                            },
+                            None => panic!("ESTE SOCIO REGISTRA UN PAGO SIN FECHA")
+                        }
                     }
                 }
-               
             }
             return recibos
+        }
+        ///
+        /// Consulta el ultimo pago y devuelve si esta vencido y sin pagar
+        /// Si devuelve true el socio se considera moroso
+        /// 
+        pub fn es_moroso(&self, current_time:Timestamp) -> bool {
+            if let Some(ultimo_pago) = self.pagos.last(){
+                return ultimo_pago.es_moroso(current_time);
+            }else{
+                panic!("No hay ningun pago registrado ni hecho ni por haber para este socio");
+            }
+        }
+        ///
+        /// 
+        /// 
+        pub fn realizar_pago(&mut self, monto: u128, precio_categorias: Vec<u128>, descuento: Option<u128>, fecha: Timestamp){
+            if let Some(ultimo_pago) = self.pagos.last(){
+                ultimo_pago.realizar_pago(descuento, monto, fecha, precio_categorias);
+            }else{
+                panic!("No hay ningun pago registrado ni hecho ni por haber para este socio");
+            }
         }
 
         ///
@@ -104,8 +134,16 @@ mod club_sem_rust {
         ///
         pub fn cambiar_categoria(&mut self, id_categoria: u32, id_deporte: Option<u32>) {
             //To Do: if id_categoria = 2 && Id_deporte = None -> Panics!  -L
-            self.id_categoria = id_categoria;
-            self.id_deporte = id_deporte;
+            if id_categoria == 2 && id_deporte == None{
+                panic!("Si se desea cambiar a Categoria B, se debe elegir un deporte");
+            }else{
+                if id_categoria == 3 || id_categoria == 1 && id_deporte != None{
+                    panic!("Si se desea cambiar a Categoria A o C, no se debe elegir un deporte");
+                }else{
+                    self.id_categoria = id_categoria;
+                    self.id_deporte = id_deporte;
+                }
+            }
         }
 
         ///
@@ -114,15 +152,6 @@ mod club_sem_rust {
         /// Si es de categoria 1 devuelve None
         ///
         pub fn get_mi_deporte(&self) -> Option<Vec<Deporte>>{
-            // Arreglado para derivar lógica (Probablemente haya que modificarlo, pero al menos ahora compila (?) - Joaco
-            /*if let Some(id) = self.id_deporte {
-                Categoria::match_categoria(self.id_categoria).get_deporte(id)
-            } else {
-                None
-            }
-            */
-            
-            //propongo algo similar a la fn puede_hacer_deporte(...) -L
             match self.id_categoria {
                 1 => return None,
                 2 => Categoria::match_categoria(self.id_categoria).get_deporte(self.id_deporte),
@@ -160,8 +189,6 @@ mod club_sem_rust {
             }
         }
     }
-
-
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -231,7 +258,6 @@ mod club_sem_rust {
             }
         }
     }
-
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -939,7 +965,11 @@ mod club_sem_rust {
             let categB = Categoria::new(2);
             let categC = Categoria::new(3);
 
+<<<<<<< HEAD
             assert_eq!(categA.match_categoria(1),Categoria::A);
+=======
+            assert_eq!(Categoria::match_categoria(1),Categoria::A);
+>>>>>>> bcd07dc (Nuevos tests y metodos para Socio)
             assert_eq!(categB.match_categoria(2),Categoria::B);
             assert_eq!(categC.match_categoria(3),Categoria::C);
 
@@ -992,4 +1022,122 @@ mod club_sem_rust {
 
         }
     }
+
+    mod recibo_tests {
+        use crate::club_sem_rust::Recibo;
+        use crate::club_sem_rust::Socio;
+
+        //RECIBO TEST --> es necesario? el test de Socios ya deberia encargarse de que funcione la creacion de recibos correctamente
+        #[test]
+        fn test_new(){
+            let nombre:String = "Carlos".to_string();
+            let dni:u32 = 44444444;
+            let monto:u128 = 1234567;
+            let id_categoria:u32 = 1;
+            let fecha:Timestamp = 1_000_000_000;
+
+            let r:Recibo= Recibo { nombre: "Carlos".to_string(),
+            dni: 44444444,
+            monto: 1234567,
+            categoria: 1,
+            fecha: 1_000_000_000 };
+
+            assert_eq!(Recibo::new(nombre, dni, monto, id_categoria, fecha),r);
+        }
+        #[test]
+        #[should_panic]
+        fn test_new_panic() {
+            let nombre:String = "Carlos".to_string();
+            let dni:u32 = 44444444;
+            let monto:u128 = 1234567;
+            let id_categoria_invalida:u32 = 100;
+            let fecha:Timestamp = 1_000_000_000;
+            
+            Recibo::new(nombre, dni, monto, id_categoria_invalida, fecha);
+        }
+
+    }
+
+    mod pago_tests {
+        use crate::club_sem_rust::Pago;
+        use crate::club_sem_rust::Socio;
+
+        #[test]
+        #[should_panic]
+        fn test_new_panic(){
+            let vencimiento: Timestamp = 1_000_000_000;
+            let id_categoria_invalida:u32 = 100;
+            Pago::new(vencimiento, id_categoria_invalida);
+        }
+
+        #[test]
+        fn test_verificar_pago(){
+            let pago:Pago = Pago::new(1_000_000_000, 3);
+            let precio_categorias:Vec<u128> = vec![3000, 2000, 1000];
+
+            assert_eq!(pago.verificar_pago(900, precio_categorias, Some(10)), true);
+
+            let pago_2:Pago = Pago::new(1_000_000_000, 1);
+            let precio_categorias_2:Vec<u128> = vec![3000, 2000, 1000];
+            
+            assert_ne!(pago.verificar_pago(0, precio_categorias_2, None), true);
+        }
+        #[test]
+        #[should_panic]
+        fn test_verificar_pago_panic(){
+            let pago:Pago = Pago::new(1_000_000_000, 3);
+            let precio_categorias_vacio:Vec<u128> = Vec::new();
+
+            pago.verificar_pago(900, precio_categorias_vacio, Some(10));
+        }
+        #[test]
+        #[should_panic]
+        fn test_realizar_pago_panic_pendiente(){
+            let current_time: Timestamp = 1_000_000;
+            let mut pago:Pago = Pago::new(1_000_000_000, 3);
+            let precio_categorias:Vec<u128> = vec![3000, 2000, 1000];
+            pago.realizar_pago(None, 1000, current_time, precio_categorias);
+
+            pago.realizar_pago(None, 1000, current_time+1_000_000, precio_categorias);
+            
+        }
+        #[test]
+        #[should_panic]
+        fn test_realizar_pago_panic_monto(){
+            let current_time: Timestamp = 1_000_000;
+            let mut pago:Pago = Pago::new(1_000_000_000, 3);
+            let precio_categorias:Vec<u128> = vec![3000, 2000, 1000];
+
+            pago.realizar_pago(None, 5000, current_time, precio_categorias);
+            
+        }
+        #[ink::test]
+        fn test_es_moroso(){
+            let pago:Pago = Pago::new(1_000_000_000, 3);
+            let current_time:Timestamp = 2_000_000_000;
+
+            assert_eq!(pago.es_moroso(current_time), true);
+
+            /* metodo que verifique si el pago esta pendiente después de la fecha de vencimiento
+             nos va a servir a la hora de verificar los morosos - L */
+
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
