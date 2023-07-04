@@ -194,6 +194,7 @@ mod club_sem_rust {
         /// 
         /// Puede llegar a dar panic por Categoria::match_categoria(id_categoria).
         /// 
+        /// # Ejemplo
         /// ```
         /// let nombre = String::from("Alice"); 
         /// let recibo = Recibo::new(nombre, u32::default(), u128::default(), 1, u64::default());
@@ -207,7 +208,14 @@ mod club_sem_rust {
                 fecha,
             }
         }
-        // Necesario para obtener la recaudacion en el Gestor - L
+        /// Devuleve el monto de un Recibo
+        /// 
+        /// # Ejemplo
+        /// ```
+        /// let nombre = String::from("Alice");
+        /// let recibo = Recibo::new(nombre, u32::default(), 5000, 1, u64::default());
+        /// assert_eq!(recibo.get_monto(), 5000)
+        /// ```
         pub fn get_monto(&self) -> u128 {
             return self.monto;
         }
@@ -221,11 +229,11 @@ mod club_sem_rust {
     pub struct Pago {
         vencimiento: Timestamp, // if(current_time >= vencimiento) then vencido
         categoria: Categoria,   // vencimiento = now + deadline_duration
+        monto: u128,
         pendiente: bool,
         a_tiempo: bool,
         aplico_descuento: bool,
         fecha_pago: Option<Timestamp>,
-        monto_pagado: Option<u128>, // Cambiar a monto a pagar
     }
     impl Pago {
         /// Construye un nuevo Pago.
