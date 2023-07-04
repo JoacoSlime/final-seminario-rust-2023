@@ -1,5 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-pub use self::club_sem_rust::ClubSemRustRef;
+pub use self::club_sem_rust::{ClubSemRustRef, Recibo, Socio};
 #[ink::contract]
 mod club_sem_rust {
     use ink::prelude::string::String;

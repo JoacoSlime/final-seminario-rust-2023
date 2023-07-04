@@ -17,16 +17,19 @@ mod gestor_de_cobros {
 
         #[ink(message)]
         pub fn socios_morosos(&self, id_deporte: u32) -> bool {
+            let socios = self.club_sem_rust.get_socios();
             todo!()
         }
 
         #[ink(message)]
         pub fn socios_no_morosos(&self, id_deporte: u32) -> bool {
+            let socios = self.club_sem_rust.get_socios();
             todo!()
         }
 
         #[ink(message)]
         pub fn recaudación(&self) -> bool {
+            let recibos = self.club_sem_rust.get_recibos();
             todo!()
         }
     }
