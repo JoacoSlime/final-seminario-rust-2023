@@ -918,7 +918,7 @@ mod club_sem_rust {
             let categB = Categoria::new(2);
             let categC = Categoria::new(3);
 
-            assert_eq!(Categoria::match_categoria(categA, 1),Categoria::A);
+            assert_eq!(categA.match_categoria(1),Categoria::A);
             assert_eq!(categB.match_categoria(2),Categoria::B);
             assert_eq!(categC.match_categoria(3),Categoria::C);
 
