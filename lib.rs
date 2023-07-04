@@ -15,9 +15,10 @@ mod gestor_de_cobros {
         }
 
         #[ink(message)]
-        pub fn socios_morosos(&self, id_deporte: u32) -> bool {
+         pub fn socios_morosos(&self, id_deporte: u32) -> Vec<Socio> {
             let socios = self.club_sem_rust.get_socios();
-            todo!()
+             let iter = socios.iter();
+             iter.filter(|s| s.es_moroso()).collect()
         }
 
         #[ink(message)]
