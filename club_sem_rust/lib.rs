@@ -4,6 +4,7 @@ pub use self::club_sem_rust::{ClubSemRustRef, Recibo, Socio};
 mod club_sem_rust {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
+    use ink_e2e::env_logger::fmt::Timestamp;
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -97,20 +98,24 @@ mod club_sem_rust {
             }
         }
         ///
+        /// Socio realiza un Pago, se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
         /// 
+        /// Socio siempre tendrá un único Pago pendiente en último índice de su lista de Pagos
+        /// La creación de un nuevo Pago pendiente se da automáticamente una vez pagado el anterior
         /// 
-        pub fn realizar_pago(&mut self, monto: u128, precio_categorias: Vec<u128>, descuento: Option<u128>, fecha: Timestamp){
-            if let Some(ultimo_pago) = self.pagos.last(){
-                ultimo_pago.realizar_pago(descuento, monto, fecha, precio_categorias);
+        pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>, deadline:Timestamp){
+            if let Some(i) = self.pagos.iter().position(|p| p.pendiente){
+                self.pagos[i].realizar_pago(descuento, monto, fecha, precio_categorias);
+                self.pagos.push(Pago::new(fecha+deadline, self.id_categoria));
             }else{
-                panic!("No hay ningun pago registrado ni hecho ni por haber para este socio");
+                panic!("Este socio no tiene pagos");
             }
         }
-
         ///
-	    /// Consulta los pagos mas recientes del Socio y devuelve si cumple los requisitos para la bonificacion o no
+	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificacion
         ///
         /// Recibe por parametro la cantidad de pagos que figuren como pagados "a tiempo" necesarios para aplicar la bonificacion
+        /// cumple_bonificacion funciona como un shor-circuit. Cuando encuentra un pago que no cumple devuelve false y termina su ejecucion
         ///
         pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
             if self.pagos.len() < pagos_consecutivos as usize {
@@ -126,7 +131,6 @@ mod club_sem_rust {
                 return true
             }
         }
-
         ///
 	    /// Permite al usuario cambiar su propia categoria
         ///
@@ -159,6 +163,9 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
+        pub fn mi_categoria(&self, id_c:u32) -> bool {
+            return self.id_categoria == id_c;
+        }
     
     }
 
@@ -188,6 +195,10 @@ mod club_sem_rust {
                 fecha,
             }
         }
+        // Necesario para obtener la recaudacion en el Gestor - L
+        pub fn get_monto(&self) -> u128 {
+            return self.monto;
+        }
     }
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
@@ -202,7 +213,7 @@ mod club_sem_rust {
         a_tiempo: bool,
         aplico_descuento: bool,
         fecha_pago: Option<Timestamp>,
-        monto_pagado: Option<u128>,
+        monto_pagado: Option<u128>, // Cambiar a monto a pagar
     }
     impl Pago {
         /// 
@@ -217,7 +228,7 @@ mod club_sem_rust {
                 a_tiempo: false,
                 aplico_descuento: false,
                 fecha_pago: None,
-                monto_pagado: None
+                monto_pagado: None // Cambiar a monto a pagar
             }
         }
         
@@ -278,7 +289,9 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
-
+        ///
+        /// Recibe por parametro un id_categoria y devuelve el tipo Categoria que le corresponde
+        ///
         pub fn match_categoria(id_categoria: u32) -> Self {
             match id_categoria {
                 1 => Self::A,
@@ -287,7 +300,6 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
-
         ///
         /// Consulta y devuelve el deporte que le corresponde categoria
         ///
@@ -306,7 +318,6 @@ mod club_sem_rust {
                 Self::C => None,
             }
         }
-
         ///  
         /// Consulta y devuelve el precio de la categoria
         ///
@@ -596,9 +607,19 @@ mod club_sem_rust {
                 assert_eq!(esperado, resultado, "Error, para id {} se esperaba {:?}, y se recibió {:?}", id, esperado, resultado);
             };
             let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(0));
-            assert!(resultado.is_err());
+            assert!(
+                match resultado {
+                    Ok(_) => panic!("Panic no es el correcto."),
+                    Err(e) => assert_eq!(e, "Id del deporte inválido, revise el ID del socio."),
+                }
+            );
             let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(9));
-            assert!(resultado.is_err());
+            assert!(
+                match resultado {
+                    Ok(_) => panic!("Panic no es el correcto."),
+                    Err(e) => assert_eq!(e, "Id del deporte inválido, revise el ID del socio."),
+                }
+            );
         }
     }
 
@@ -965,11 +986,7 @@ mod club_sem_rust {
             let categB = Categoria::new(2);
             let categC = Categoria::new(3);
 
-<<<<<<< HEAD
             assert_eq!(categA.match_categoria(1),Categoria::A);
-=======
-            assert_eq!(Categoria::match_categoria(1),Categoria::A);
->>>>>>> bcd07dc (Nuevos tests y metodos para Socio)
             assert_eq!(categB.match_categoria(2),Categoria::B);
             assert_eq!(categC.match_categoria(3),Categoria::C);
 
@@ -1045,7 +1062,7 @@ mod club_sem_rust {
             assert_eq!(Recibo::new(nombre, dni, monto, id_categoria, fecha),r);
         }
         #[test]
-        #[should_panic]
+        #[should_panic(expected = "id_categoria fuera de rango.")]
         fn test_new_panic() {
             let nombre:String = "Carlos".to_string();
             let dni:u32 = 44444444;
@@ -1063,7 +1080,7 @@ mod club_sem_rust {
         use crate::club_sem_rust::Socio;
 
         #[test]
-        #[should_panic]
+        #[should_panic(expected = "id_categoria fuera de rango.")]
         fn test_new_panic(){
             let vencimiento: Timestamp = 1_000_000_000;
             let id_categoria_invalida:u32 = 100;
@@ -1083,15 +1100,7 @@ mod club_sem_rust {
             assert_ne!(pago.verificar_pago(0, precio_categorias_2, None), true);
         }
         #[test]
-        #[should_panic]
-        fn test_verificar_pago_panic(){
-            let pago:Pago = Pago::new(1_000_000_000, 3);
-            let precio_categorias_vacio:Vec<u128> = Vec::new();
-
-            pago.verificar_pago(900, precio_categorias_vacio, Some(10));
-        }
-        #[test]
-        #[should_panic]
+        #[should_panic(expected = "El pago no está pendiente")]
         fn test_realizar_pago_panic_pendiente(){
             let current_time: Timestamp = 1_000_000;
             let mut pago:Pago = Pago::new(1_000_000_000, 3);
@@ -1102,7 +1111,7 @@ mod club_sem_rust {
             
         }
         #[test]
-        #[should_panic]
+        #[should_panic(expected = "Monto incorrecto.")]
         fn test_realizar_pago_panic_monto(){
             let current_time: Timestamp = 1_000_000;
             let mut pago:Pago = Pago::new(1_000_000_000, 3);

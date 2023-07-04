@@ -2,6 +2,7 @@
 
 #[ink::contract]
 mod gestor_de_cobros {
+    use alloc::vec;
     use club_sem_rust::ClubSemRustRef;
     #[ink(storage)]
     pub struct GestorDeCobros {
@@ -32,9 +33,31 @@ mod gestor_de_cobros {
         }
 
         #[ink(message)]
-        pub fn recaudación(&self) -> bool {
-            let recibos = self.club_sem_rust.get_recibos();
-            todo!()
+        pub fn recaudación(&self) -> Vec<u128> {
+            let socios:Vec<Socio> = self.club_sem_rust.get_socios();
+            let mut vec_recaudacion:Vec<u128> = Vec::new();
+
+            let recaudacion_categoria_a:u128 = socios.iter().filter(|s| s.mi_categoria(1))
+            .map(|s| s.generar_recibos().get_monto())
+            .count();
+            
+            let recaudacion_categoria_b:u128 = socios.iter().filter(|s| s.mi_categoria(2))
+            .map(|s| s.generar_recibos().get_monto())
+            .count();
+
+            let recaudacion_categoria_c:u128 = socios.iter().filter(|s| s.mi_categoria(3))
+            .map(|s| s.generar_recibos().get_monto())
+            .count();
+
+            vec_recaudacion.push(recaudacion_categoria_a);
+            vec_recaudacion.push(recaudacion_categoria_b);
+            vec_recaudacion.push(recaudacion_categoria_c);
+
+            //let recibos = self.club_sem_rust.get_recibos();
+
+
+
+            return vec_recaudacion;
         }
     }
 }
