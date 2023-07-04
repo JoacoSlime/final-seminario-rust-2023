@@ -404,7 +404,7 @@ mod club_sem_rust {
                     let i = id_categoria-1;
             		self.precio_categorias[i as usize] = p_categoria;
         	}else{
-            		todo!(); //panics! -L
+            		panic!("SE INGRESÓ MAL LA CATEGORIA!!"); //panics! -L
         	}
         }
 
