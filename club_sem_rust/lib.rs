@@ -146,10 +146,19 @@ mod club_sem_rust {
         fecha: Timestamp,
     }
     impl Recibo {
-        pub fn new(nombre: String, dni:u32, monto:u128, categoria:Categoria, fecha:Timestamp) -> Recibo {
-            Recibo { nombre, dni, monto, categoria, fecha, }
+        /// 
+        /// Recibe un nombre, un dni, un monto, un id_categoria y una fecha.
+        /// Devuelve un Recibo.
+        ///  
+        pub fn new(nombre: String, dni:u32, monto:u128, id_categoria: u32, fecha:Timestamp) -> Recibo {
+            Recibo { 
+                nombre,
+                dni,
+                monto,
+                categoria: Categoria::match_categoria(id_categoria),
+                fecha,
+            }
         }
-        //o, recibe id_categoria y lo matchea con un tipo categoria -L
     }
 
 
@@ -169,23 +178,57 @@ mod club_sem_rust {
         monto_pagado: Option<u128>,
     }
     impl Pago {
+        /// 
+        /// Recibe una fecha de vencimiento y un id de categoría.
+        /// Devuelve un nuevo Pago.
+        /// 
         pub fn new(vencimiento:Timestamp, id_categoria: u32) -> Pago {
-            Pago { vencimiento, categoria: Categoria::new(id_categoria), pendiente: true, a_tiempo: false, aplico_descuento: false, fecha_pago: None , monto_pagado: None}
+            Pago {
+                vencimiento,
+                categoria: Categoria::new(id_categoria),
+                pendiente: true,
+                a_tiempo: false,
+                aplico_descuento: false,
+                fecha_pago: None,
+                monto_pagado: None
+            }
         }
-    
-        pub fn verificar_pago(&self, monto: u128, precio_categorias: Vec<u128>) -> bool {
+        
+        /// 
+        /// Recibe un monto, un vector de precios de las categorias y un descuento.
+        /// Devuelve true si el pago es válido en base a los parametros.
+        /// 
+        pub fn verificar_pago(&self, monto: u128, precio_categorias: Vec<u128>, descuento: Option<u128>) -> bool {
+            let precio_categorias: Vec<u128> = if let Some(descuento) = descuento {
+                let mut precio_categorias = precio_categorias;
+                for p in &mut precio_categorias {
+                    *p =  *p - *p * (descuento / 100)
+                };
+                precio_categorias
+            } else {
+                precio_categorias
+            };
             self.categoria.mensual(precio_categorias) == monto
         }
     
-        pub fn realizar_pago(&mut self, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>) {
-            todo!()
-            /*
-            > verifica el pago
-            > si es correcto el monto ingresado
-            > aplico_descuento? verificar eso
-            > poner el monto_pagado, fecha_pago, pendiente -> false
-            > a_tiempo -> true SI fecha_hoy < fecha_vencimiento
-            */
+        /// 
+        /// Recibe un descuento, un monto, una fecha y un vector de precios de categorias.
+        /// Sí el pago es válido y no está pendiente, lo establece como completado y llena los campos correspondientes.
+        /// 
+        pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>) {
+            if !self.pendiente {
+                panic!("El pago no está pendiente.");
+            } else if !self.verificar_pago(monto, precio_categorias, descuento) {
+                panic!("Monto incorrecto.");
+            } else {
+                self.monto_pagado = Some(monto);
+                self.fecha_pago = Some(fecha);
+                self.pendiente = false;
+                if descuento.is_some() {
+                    self.aplico_descuento = true;
+                };
+                self.a_tiempo = self.vencimiento > fecha;
+            }
         }
     }
 
