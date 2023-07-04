@@ -190,10 +190,14 @@ mod club_sem_rust {
         fecha: Timestamp,
     }
     impl Recibo {
+        /// Construye un nuevo Recibo.
         /// 
-        /// Recibe un nombre, un dni, un monto, un id_categoria y una fecha.
-        /// Devuelve un Recibo.
-        ///  
+        /// Puede llegar a dar panic por Categoria::match_categoria(id_categoria).
+        /// 
+        /// ```
+        /// let nombre = String::from("Alice"); 
+        /// let recibo = Recibo::new(nombre, u32::default(), u128::default(), 1, u64::default());
+        /// ```
         pub fn new(nombre: String, dni:u32, monto:u128, id_categoria: u32, fecha:Timestamp) -> Recibo {
             Recibo { 
                 nombre,
@@ -224,9 +228,13 @@ mod club_sem_rust {
         monto_pagado: Option<u128>, // Cambiar a monto a pagar
     }
     impl Pago {
+        /// Construye un nuevo Pago.
         /// 
-        /// Recibe una fecha de vencimiento y un id de categoría.
-        /// Devuelve un nuevo Pago.
+        /// Puede llegar a dar panic por Categoria::new(id_categoria).
+        /// 
+        /// ```
+        /// let pago = Pago::new(u64::default(), 1);
+        /// ```
         /// 
         pub fn new(vencimiento:Timestamp, id_categoria: u32) -> Pago {
             Pago {
@@ -239,11 +247,30 @@ mod club_sem_rust {
                 monto_pagado: None // Cambiar a monto a pagar
             }
         }
+
+
+        /// Retorna true en caso de que el pago sea moroso.
+        /// 
+        /// Un pago se considera "moroso" en caso de que esté vencido e impago.
+        /// 
+        /// ```
+        /// let pago = Pago::new(u64::default(), 1);
+        /// assert!(pago.es_moroso(u64::default() + 1));
+        /// ```
+        pub fn es_moroso(&self, now: Timestamp) -> bool {
+            self.pendiente && self.vencimiento < now
+        }
         
+        /// Retorna true en caso de que el monto sea exactamente igual al que debe pagarse.
         /// 
-        /// Recibe un monto, un vector de precios de las categorias y un descuento.
-        /// Devuelve true si el pago es válido en base a los parametros.
+        /// Aplica el descuento (si es que existe) sobre los precios, luego compara el monto con el precio de la categoría correspondiente.  
         /// 
+        /// ```
+        /// let pago = Pago::new(u64::default(), 1);
+        /// let precio_categorias = Vec::from([5000,3000,2000]);
+        /// let descuento = Some(10)
+        /// assert!(pago.verificar_pago(4500, descuento)); 
+        /// ```
         pub fn verificar_pago(&self, monto: u128, precio_categorias: Vec<u128>, descuento: Option<u128>) -> bool {
             let precio_categorias: Vec<u128> = if let Some(descuento) = descuento {
                 let mut precio_categorias = precio_categorias;
@@ -257,10 +284,16 @@ mod club_sem_rust {
             self.categoria.mensual(precio_categorias) == monto
         }
     
+        
+        /// Cambia el estado de un pago a pagado si es válido.
         /// 
-        /// Recibe un descuento, un monto, una fecha y un vector de precios de categorias.
-        /// Sí el pago es válido y no está pendiente, lo establece como completado y llena los campos correspondientes.
+        /// Verifica que el monto a pagar sea el correcto y que el pago esté pendiente, luego camabia el estado del pago a pagado. 
         /// 
+        /// ```
+        /// let pago = Pago::new(u64::default()+1, 1);
+        /// let precio_categorias = Vec::from([5000,3000,2000]);
+        /// pago.realizar_pago(None, 5000, u64::default(), precio_categorias);
+        /// ```
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>) {
             if !self.pendiente {
                 panic!("El pago no está pendiente.");
@@ -536,7 +569,7 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn get_recibos(&self, dni: u32) -> Option<Vec<Recibo>> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
-                Some(socio.generar_recibo())
+                Some(socio.generar_recibos())
             } else {
                 None
             }
