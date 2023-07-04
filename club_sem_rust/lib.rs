@@ -12,7 +12,7 @@ pub use self::club_sem_rust::{ClubSemRustRef, Recibo, Socio};
 mod club_sem_rust {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
-    use ink_e2e::env_logger::fmt::Timestamp;
+    //use ink_e2e::env_logger::fmt::Timestamp;
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -29,27 +29,37 @@ mod club_sem_rust {
     impl Socio{
         ///
         /// Construye un nuevo Socio con sus variables de a cuerdo a lo que le enviemos por parametro.
+        /// 
+        /// Puede devolver panic sino se corresponde el id_deporte con la categoria.
+        /// Un Socio perteneciente a la Categoria A o C debe recibir un id_deporte = None
+        /// Un Socio perteneciente a la Categoria B debe recibir un id_Deporte = Some(...)
+        /// 
+        /// Un Socio perteneciente a la Categoria B no debe recibir un id_Deporte = Some(2)
+        /// Si lo hace devolverá panic, pues el id 2 representa a Gimnasio, que ya viene por defecto para la Categoria B
         ///
         /// Empieza con un Pago pendiente
         ///
-        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp) -> Socio {
+        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: Vec<u128>) -> Socio {
             if id_categoria == 2 && id_deporte == None{
                 panic!("Categoria B debe elegir un deporte");
             }else{
                 if id_categoria == 1 || id_categoria == 3 && id_deporte != None{
                     panic!("Categoria A y Categoria C no deben elegir un deporte  -- Este campo debe permanecer vacio");
                 }else{
-                    let pago_inicial:Vec<Pago> = vec![Pago::new(vencimiento, id_categoria)];
-                    Socio {
-                        id_deporte,
-                        id_categoria,
-                        dni,
-                        nombre,
-                        pagos: pago_inicial,
+                    if id_categoria == 2 && id_deporte == Some(2){
+                        panic!("Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8");
+                    }else{
+                        let pago_inicial:Vec<Pago> = vec![Pago::new(vencimiento, id_categoria, None, precio_categorias)];
+                        Socio {
+                            id_deporte,
+                            id_categoria,
+                            dni,
+                            nombre,
+                            pagos: pago_inicial,
+                        }
                     }
                 }
             }
-            // TODO: AVISO, esta función puede ser modificada en un futuro en caso de no querer llamar a Deportes::get_deportes(id_deporte) en otras funciones. - Joaco
         }
         ///
 	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte
@@ -60,21 +70,25 @@ mod club_sem_rust {
             match self.id_categoria {
             	1 => return true,
             	2 => match id_deporte{
-                        2 => return true,   //si el id es gimnasio, Categoria B deberia devolver true
-                        _=> if let Some(id_dep) = self.id_deporte { //si no es gimnasio, chequear que coincida
+                        2 => return true,
+                        _=> if let Some(id_dep) = self.id_deporte {
                                 return id_dep == id_deporte;
                             }else{
                                 return false;
                             },
                     },
         		3 => match id_deporte{
-                        2 => return true,   //si el id es gimnasio, Categoria C deberia devolver true
+                        2 => return true,
                         _=> return false,
                     },
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
     	    }
         }
-        //El metodo generar_recibos recorre los pagos y en caso de que no figure como pendiente crea el recibo y lo agrega al vec de recibos
+        ///
+        /// Recorre todos los Pagos completados de un Socio y crea un listado de recibos con los datos relevantes de cada Pago
+        /// 
+        /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
+        /// 
         pub fn generar_recibos(&mut self) -> Vec<Recibo> {
             let mut recibos = Vec::new();
             if self.pagos.len() != 0 {
@@ -82,48 +96,48 @@ mod club_sem_rust {
                     if self.pagos[i].pendiente == false{
                         match self.pagos[i].fecha_pago{
                             Some(fe) => {
-                                if let Some(monto_pagado) = self.pagos[i].monto_pagado {
-                                let recibo = Recibo::new(self.nombre, self.dni, monto_pagado, self.id_categoria, fe );
-                                recibos.push(recibo);
-                                }
+                                let recibo = Recibo::new(self.nombre, self.dni, self.pagos[i].monto, self.id_categoria, fe );
+                                recibos.push(recibo);    
                             },
-                            None => panic!("ESTE SOCIO REGISTRA UN PAGO SIN FECHA")
+                            None => panic!("Este Socio registra un Pago sin fecha")
                         }
                     }
                 }
+            }else{
+                panic!("Este Socio no tiene ningun pago registrado habido ni por haber")
             }
             return recibos
         }
         ///
-        /// Consulta el ultimo pago y devuelve si esta vencido y sin pagar
+        /// Consulta el ultimo pago y devuelve true si está vencido y sin pagar
         /// Si devuelve true el socio se considera moroso
         /// 
         pub fn es_moroso(&self, current_time:Timestamp) -> bool {
             if let Some(ultimo_pago) = self.pagos.last(){
                 return ultimo_pago.es_moroso(current_time);
             }else{
-                panic!("No hay ningun pago registrado ni hecho ni por haber para este socio");
+                panic!("Este socio no tiene pagos habidos ni por haber");
             }
         }
         ///
-        /// Socio realiza un Pago, se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
+        /// Socio realiza un Pago, luego se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
         /// 
-        /// Socio siempre tendrá un único Pago pendiente en último índice de su lista de Pagos
+        /// Socio siempre deberá tener un único Pago pendiente en el último índice de su lista de Pagos
         /// La creación de un nuevo Pago pendiente se da automáticamente una vez pagado el anterior
         /// 
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>, deadline:Timestamp){
             if let Some(i) = self.pagos.iter().position(|p| p.pendiente){
                 self.pagos[i].realizar_pago(descuento, monto, fecha, precio_categorias);
-                self.pagos.push(Pago::new(fecha+deadline, self.id_categoria));
+                self.pagos.push(Pago::new(fecha+deadline, self.id_categoria, descuento, precio_categorias));
             }else{
-                panic!("Este socio no tiene pagos");
+                panic!("Este socio no tiene pagos habidos ni por haber");
             }
         }
         ///
 	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificacion
         ///
-        /// Recibe por parametro la cantidad de pagos que figuren como pagados "a tiempo" necesarios para aplicar la bonificacion
-        /// cumple_bonificacion funciona como un shor-circuit. Cuando encuentra un pago que no cumple devuelve false y termina su ejecucion
+        /// Recibe por parametro la cantidad de pagos consecutivos que deben figurar como pagados "a tiempo" para aplicar la bonificacion
+        /// cumple_bonificacion funciona como un shor-circuit. Al encontrar un pago que no cumple devuelve false y termina su ejecución
         ///
         pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
             if self.pagos.len() < pagos_consecutivos as usize {
@@ -143,34 +157,45 @@ mod club_sem_rust {
 	    /// Permite al usuario cambiar su propia categoria
         ///
         /// Si el id_categoria y/o id_deporte ingresados son invalidos, no guarda ningun cambio y se genera un panic
+        /// 
+        /// Si se cambia a Categoria A o C debe setear id_deporte = None
+        /// Si se cambia a Categoria B debe setear id_Deporte = Some(...)
+        /// Si se cambia a Categoria B id_Deporte != Some(2)
         ///
         pub fn cambiar_categoria(&mut self, id_categoria: u32, id_deporte: Option<u32>) {
-            //To Do: if id_categoria = 2 && Id_deporte = None -> Panics!  -L
-            if id_categoria == 2 && id_deporte == None{
-                panic!("Si se desea cambiar a Categoria B, se debe elegir un deporte");
+            if id_categoria == 2 && id_deporte == Some(2){
+                panic!("Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8");
             }else{
-                if id_categoria == 3 || id_categoria == 1 && id_deporte != None{
-                    panic!("Si se desea cambiar a Categoria A o C, no se debe elegir un deporte");
+                if id_categoria == 2 && id_deporte == None{
+                    panic!("Si se desea cambiar a Categoria B, se debe elegir un deporte");
                 }else{
-                    self.id_categoria = id_categoria;
-                    self.id_deporte = id_deporte;
+                    if id_categoria == 3 || id_categoria == 1 && id_deporte != None{
+                        panic!("Si se desea cambiar a Categoria A o C, no se debe elegir un deporte");
+                    }else{
+                        self.id_categoria = id_categoria;
+                        self.id_deporte = id_deporte;
+                    }
                 }
             }
         }
-
         ///
 	    /// Devuelve todos los deportes que realiza un determinado Socio
         ///
-        /// Si es de categoria 1 devuelve None
+        /// Si es de Categoria C, devuelve None
         ///
         pub fn get_mi_deporte(&self) -> Option<Vec<Deporte>>{
             match self.id_categoria {
-                1 => return None,
+                3 => return None,
                 2 => Categoria::match_categoria(self.id_categoria).get_deporte(self.id_deporte),
-                3 => return Categoria::match_categoria(self.id_categoria).get_deporte(None),
+                1 => return Categoria::match_categoria(self.id_categoria).get_deporte(None),
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
+        ///
+        /// Determina la categoria de un Socio
+        /// Si el ID ingresado por parametro coincide con la categoria del Socio devuleve true
+        /// Caso contrario devuelve false
+        /// 
         pub fn mi_categoria(&self, id_c:u32) -> bool {
             return self.id_categoria == id_c;
         }
@@ -328,6 +353,15 @@ mod club_sem_rust {
         C,
     }
     impl Categoria {
+        ///
+        /// Construye una Categoría a partir del ID ingresado por parámetro.
+        /// 
+        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido
+        /// 
+        /// Categoría A --> ID = 1
+        /// Categoría B --> ID = 2
+        /// Categoría C --> ID = 3
+        ///
         pub fn new(id_categoria:u32) -> Categoria {
             match id_categoria {
                 1 => Self::A,
@@ -338,6 +372,12 @@ mod club_sem_rust {
         }
         ///
         /// Recibe por parametro un id_categoria y devuelve el tipo Categoria que le corresponde
+        /// 
+        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido
+        ///
+        /// Categoría A --> ID = 1
+        /// Categoría B --> ID = 2
+        /// Categoría C --> ID = 3
         ///
         pub fn match_categoria(id_categoria: u32) -> Self {
             match id_categoria {
@@ -349,8 +389,15 @@ mod club_sem_rust {
         }
         ///
         /// Consulta y devuelve el deporte que le corresponde categoria
+        /// 
+        /// Todas las categorías pueden acceder al Gimnasio por defecto.
+        /// 
+        /// Categoría A --> Devuelve una lista con todos los deportes practicables en el Club SemRust
+        /// Categoría B --> Devuelve el deporte elegido por el Socio
+        /// Categoría C --> No practica deportes por fuera del Gimnasio
         ///
         /// Recibe por parametro un Option<u32> del id_deporte
+        /// Puede devolver panic si se envia por parámetro un id_deporte = None siendo la categoría actual Categoría B
         ///
         pub fn get_deporte(&self, id_deporte: Option<u32>) -> Option<Vec<Deporte>> {
             match self {
@@ -359,16 +406,16 @@ mod club_sem_rust {
                     if let Some(id) = id_deporte {
                         Some(vec![Deporte::match_deporte(id)])
                     }else{
-                        None //o panic! ? -L
+                        panic!("No se encontró un ID de deporte")
                     }
                 },
                 Self::C => None,
             }
         }
         ///  
-        /// Consulta y devuelve el precio de la categoria
+        /// Consulta y devuelve el precio de la categoría de acuerdo a la lista de precios asignada por el contrato
         ///
-        /// Recibe por parametro la lista de precios, el indice se corresponde con el precio correspondiente a la categoria
+        /// Recibe por parametro la lista de precios, el indice se corresponde con el precio correspondiente a la categoría
         ///
         pub fn mensual(&self, precio_categorias: Vec<u128>) -> u128 {
             match self {
@@ -530,7 +577,7 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>) {
             let hoy = self.env().block_timestamp() + self.duracion_deadline;
-            let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy);
+            let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy, self.precio_categorias);
             self.socios.push(socio);
         }
         
@@ -1124,8 +1171,8 @@ mod club_sem_rust {
     }
 
     mod pago_tests {
-        use crate::club_sem_rust::Pago;
-        use crate::club_sem_rust::Socio;
+        //use crate::club_sem_rust::Pago;
+        //use crate::club_sem_rust::Socio;
 
         #[test]
         #[should_panic(expected = "id_categoria fuera de rango.")]
