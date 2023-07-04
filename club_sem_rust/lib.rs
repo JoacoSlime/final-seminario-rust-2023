@@ -409,6 +409,12 @@ mod club_sem_rust {
         
         #[ink(message)]
         pub fn registrar_pago(&mut self, dni: u32, monto: u128) {
+            /*
+                - Busca el socio
+                - Toma el último pago
+                - Si no está pago:
+                    - Llama a realizar pago
+            */
             let hoy = self.env().block_timestamp();
             todo!()
         }
