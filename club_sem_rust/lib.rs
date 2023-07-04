@@ -459,7 +459,28 @@ mod club_sem_rust {
                     - Llama a realizar pago
             */
             let hoy = self.env().block_timestamp();
-            todo!()
+            if self.socios.len() > 0{
+                let i:i32 = 0;
+                while (i as usize) < self.socios.len() && self.socios[i].dni != dni{
+                     i = i + 1;
+                }
+                if self.socios[i].dni != dni{
+                    panic!("EL DNI INGRESADO NO ES VALIDO");
+                } else{
+                    if self.socios[i].pagos[self.socios[i].pagos.len() - 1].pendiente = true {
+                        if self.socios[i].cumple_bonificacion(){
+                            self.socios[i].pagos[self.socios[i].pagos.len() - 1].realizar_pago(Some(self.descuento), monto, hoy, self.precio_categorias);
+                        }else{
+                            self.socios[i].pagos[self.socios[i].pagos.len() - 1].realizar_pago(None, monto, hoy, self.precio_categorias);
+                        }
+                        
+                    }else{
+                        panic!("EL PAGO YA FUE REGISTRADO");
+                    }
+                }
+            }
+            
+           
         }
         
         #[ink(message)]
