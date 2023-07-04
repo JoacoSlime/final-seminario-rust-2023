@@ -774,16 +774,17 @@ mod club_sem_rust {
         fn registrar_nuevo_socio_test() {
             let now = super::get_current_time();
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
+            let precio_categorias = vec![5000, 3000, 2000];
             let esperado = ClubSemRust{
                 socios: Vec::from([Socio{
                     id_deporte: None,
                     id_categoria: 3,
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
-                    pagos: vec![Pago::new(now + 864_000_000, 2000)],
+                    pagos: vec![Pago::new(now + 864_000_000, 2000, None, precio_categorias)],
                 }]),
                 descuento: 15,
-                precio_categorias: vec![5000, 3000, 2000],
+                precio_categorias,
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
                 cuentas_habilitadas: Vec::new(),
@@ -801,13 +802,13 @@ mod club_sem_rust {
                     id_categoria: 3,
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
-                    pagos: vec![Pago::new(now + 864_000_000, 2000)],
+                    pagos: vec![Pago::new(now + 864_000_000, 2000, None, precio_categorias)],
                 }, Socio{
                     id_deporte: Some(5),
                     id_categoria: 3,
                     dni: 45045045,
                     nombre: "Roberto".to_string(),
-                    pagos: vec![Pago::new(now + 864_000_000, 2000)],
+                    pagos: vec![Pago::new(now + 864_000_000, 2000, None, precio_categorias)],
                 }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
@@ -922,18 +923,18 @@ mod club_sem_rust {
                             categoria: Categoria::A,
                             pendiente: false,
                             a_tiempo: true,
-                            aplico_descuento: true,
+                            aplico_descuento: false,
                             fecha_pago: Some(now),
-                            monto_pagado: Some(5000),
+                            monto: 5000,
                         },
                         Pago{
                             vencimiento: now + 5_000_000,
                             categoria: Categoria::C,
                             pendiente: false,
                             a_tiempo: true,
-                            aplico_descuento: true,
+                            aplico_descuento: false,
                             fecha_pago: Some(now + 1_000_000),
-                            monto_pagado: Some(2000),
+                            monto: 2000,
                         }
                     ])
                 }, Socio{
