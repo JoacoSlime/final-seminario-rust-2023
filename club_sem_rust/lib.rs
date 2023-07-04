@@ -1,3 +1,11 @@
+//! Trabajo final de Seminario de Lenguajes: Rust (2023)
+//! 
+//! Este modulo es un trabajo conceptual del uso de Ink! para la creación de smart-contracts.
+//! No se recomienda su utilización en un escenario de producción.
+//! 
+//! [`Github`]: https://github.com/JoacoSlime/final-seminario-rust-2023
+//! 
+
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 pub use self::club_sem_rust::{ClubSemRustRef, Recibo, Socio};
 #[ink::contract]
