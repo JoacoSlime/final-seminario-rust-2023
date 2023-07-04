@@ -606,15 +606,17 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
-        #[test]
+        #[ink::test]
         fn registrar_nuevo_socio_test() {
+            let now = super::get_current_time();
+            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
             let esperado = ClubSemRust{
                 socios: Vec::from([Socio{
                     id_deporte: None,
                     id_categoria: 3,
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
-                    pagos: Vec::new(),
+                    pagos: vec![Pago::new(now + 864_000_000, 2000)],
                 }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
@@ -635,13 +637,13 @@ mod club_sem_rust {
                     id_categoria: 3,
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
-                    pagos: Vec::new(),
+                    pagos: vec![Pago::new(now + 864_000_000, 2000)],
                 }, Socio{
                     id_deporte: Some(5),
                     id_categoria: 3,
                     dni: 45045045,
                     nombre: "Roberto".to_string(),
-                    pagos: Vec::new(),
+                    pagos: vec![Pago::new(now + 864_000_000, 2000)],
                 }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
@@ -659,6 +661,8 @@ mod club_sem_rust {
         
         #[ink::test]
         fn registrar_pago_test() {
+            let now = super::get_current_time();
+            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
             let esperado = ClubSemRust{
                 socios: Vec::from([Socio{
                     id_deporte: None,
@@ -666,7 +670,7 @@ mod club_sem_rust {
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
                     pagos: Vec::from([
-                        Pago::new(super::get_current_time(), 2000)
+                        Pago::new(now + 864_000_000, 2000)
                     ]),
                 }]),
                 descuento: 15,
@@ -684,13 +688,15 @@ mod club_sem_rust {
 
         #[test]
         fn get_socios_test() {
+            let now = super::get_current_time();
+            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
             let esperado = Vec::from([Socio{
                 id_deporte: None,
                 id_categoria: 3,
                 dni: 44044044,
                 nombre: "Juancito".to_string(),
                 pagos: Vec::from([
-                    Pago::new(super::get_current_time(), 2000)
+                    Pago::new(now, 2000)
                 ]),
             }, Socio{
                 id_deporte: Some(5),
@@ -706,7 +712,7 @@ mod club_sem_rust {
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
                     pagos: Vec::from([
-                        Pago::new(super::get_current_time(), 2000)
+                        Pago::new(now, 2000)
                     ]),
                 }]),
                 descuento: 15,
