@@ -662,11 +662,40 @@ mod club_sem_rust {
             + since_the_epoch.subsec_nanos() as u64 / 1_000_000_000
     }
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     #[cfg(test)]
     mod deporte_tests {
         use crate::club_sem_rust::Deporte;
         
-
         #[test]
         fn get_deportes_test(){
             let esperado: Vec<Deporte> = vec![
@@ -1136,11 +1165,9 @@ mod club_sem_rust {
     }
 
     mod recibo_tests {
-        use crate::club_sem_rust::Recibo;
-        use crate::club_sem_rust::Socio;
 
-        //RECIBO TEST --> es necesario? el test de Socios ya deberia encargarse de que funcione la creacion de recibos correctamente
         #[test]
+        #[ink::test]
         fn test_new(){
             let nombre:String = "Carlos".to_string();
             let dni:u32 = 44444444;
@@ -1156,7 +1183,9 @@ mod club_sem_rust {
 
             assert_eq!(Recibo::new(nombre, dni, monto, id_categoria, fecha),r);
         }
+        
         #[test]
+        #[ink::test]
         #[should_panic(expected = "id_categoria fuera de rango.")]
         fn test_new_panic() {
             let nombre:String = "Carlos".to_string();
@@ -1171,18 +1200,18 @@ mod club_sem_rust {
     }
 
     mod pago_tests {
-        //use crate::club_sem_rust::Pago;
-        //use crate::club_sem_rust::Socio;
 
         #[test]
+        #[ink::test]
         #[should_panic(expected = "id_categoria fuera de rango.")]
         fn test_new_panic(){
             let vencimiento: Timestamp = 1_000_000_000;
             let id_categoria_invalida:u32 = 100;
             Pago::new(vencimiento, id_categoria_invalida);
         }
-
+        
         #[test]
+        #[ink::test]
         fn test_verificar_pago(){
             let pago:Pago = Pago::new(1_000_000_000, 3);
             let precio_categorias:Vec<u128> = vec![3000, 2000, 1000];
@@ -1194,7 +1223,9 @@ mod club_sem_rust {
             
             assert_ne!(pago.verificar_pago(0, precio_categorias_2, None), true);
         }
+        
         #[test]
+        #[ink::test]
         #[should_panic(expected = "El pago no está pendiente")]
         fn test_realizar_pago_panic_pendiente(){
             let current_time: Timestamp = 1_000_000;
@@ -1205,7 +1236,9 @@ mod club_sem_rust {
             pago.realizar_pago(None, 1000, current_time+1_000_000, precio_categorias);
             
         }
+        
         #[test]
+        #[ink::test]
         #[should_panic(expected = "Monto incorrecto.")]
         fn test_realizar_pago_panic_monto(){
             let current_time: Timestamp = 1_000_000;
@@ -1215,6 +1248,8 @@ mod club_sem_rust {
             pago.realizar_pago(None, 5000, current_time, precio_categorias);
             
         }
+        
+        #[test]
         #[ink::test]
         fn test_es_moroso(){
             let pago:Pago = Pago::new(1_000_000_000, 3);
@@ -1229,19 +1264,6 @@ mod club_sem_rust {
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }
