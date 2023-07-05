@@ -3,6 +3,7 @@
 #[ink::contract]
 mod gestor_de_cobros {
     use alloc::vec;
+    use club_sem_rust::Recibo;
     use::ink::prelude::string;
     use::ink::prelude::vec;
     use club_sem_rust::ClubSemRustRef;
@@ -36,32 +37,64 @@ mod gestor_de_cobros {
             ).collect()
         }
 
+        ///
+        /// Genera un vector con la recaudacion del mes actual para cada Categoría,
+        /// esto significa, la suma de los montos pagados en un mes de todos los Recibos
+        /// de los Socios de cada Categoría.
+        /// 
+        /// Se considera el paso de 30 días como el paso de un mes.
+        /// Y 2_592_000_000 representa 30 dias para el tipo Timestamp.
+        /// 
+        /// Se contará la Recaudación para cada una de las tres Categorías
+        /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
+        /// 
         #[ink(message)]
         pub fn recaudación(&self) -> Vec<u128> {
             let socios:Vec<Socio> = self.club_sem_rust.get_socios();
             let mut vec_recaudacion:Vec<u128> = Vec::new();
 
             let fecha_hoy:Timestamp = self.env().block_timestamp();
-            // 864_000_000 es diez dias, 2_592_000_000 es un mes
-            // if recibo.fecha > fecha_hoy-2_592_000_000 --> el recibo fue hecho dentro del mes
-
-            let recaudacion_categoria_a:u128 = socios.iter().filter(|s| s.mi_categoria(1))
-            .map(|s| s.generar_recibos().get_monto())
-            .count();
             
-            let recaudacion_categoria_b:u128 = socios.iter().filter(|s| s.mi_categoria(2))
-            .map(|s| s.generar_recibos().get_monto())
+
+            let recibos_categoria_a:Vec<Recibo> = socios.iter()
+            .filter(|s| s.mi_categoria(1))
+            .map(|s| s.generar_recibos())
+            .collect();
+            let recaudacion_categoria_a:u128 = recibos_categoria_a.iter()
+            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
+            .map(|r| r.get_monto())
             .count();
 
-            let recaudacion_categoria_c:u128 = socios.iter().filter(|s| s.mi_categoria(3))
-            .map(|s| s.generar_recibos().get_monto())
+            let recaudacion_a: Recaudacion = Recaudacion::new(recaudacion_categoria_a, fecha_hoy, 1);
+            
+            let recibos_categoria_b:Vec<Recibo> = socios.iter()
+            .filter(|s| s.mi_categoria(2))
+            .map(|s| s.generar_recibos())
+            .collect();
+            let recaudacion_categoria_b:u128 = recibos_categoria_b.iter()
+            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
+            .map(|r| r.get_monto())
             .count();
 
-            vec_recaudacion.push(recaudacion_categoria_a);
-            vec_recaudacion.push(recaudacion_categoria_b);
-            vec_recaudacion.push(recaudacion_categoria_c);
+            let recaudacion_b: Recaudacion = Recaudacion::new(recaudacion_categoria_b, fecha_hoy, 2);
+
+            let recibos_categoria_c:Vec<Recibo> = socios.iter()
+            .filter(|s| s.mi_categoria(3))
+            .map(|s| s.generar_recibos())
+            .collect();
+            let recaudacion_categoria_c:u128 = recibos_categoria_c.iter()
+            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
+            .map(|r| r.get_monto())
+            .count();
+
+            let recaudacion_c: Recaudacion = Recaudacion::new(recaudacion_categoria_c, fecha_hoy, 3);
+
+            vec_recaudacion.push(recaudacion_a);
+            vec_recaudacion.push(recaudacion_b);
+            vec_recaudacion.push(recaudacion_c);
 
             return vec_recaudacion;
+
         }
     }
 

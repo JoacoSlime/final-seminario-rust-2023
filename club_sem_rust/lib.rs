@@ -39,7 +39,7 @@ mod club_sem_rust {
         ///
         /// Empieza con un Pago pendiente
         ///
-        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: Vec<u128>) -> Socio {
+        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: &Vec<u128>) -> Socio {
             if id_categoria == 2 && id_deporte == None{
                 panic!("Categoria B debe elegir un deporte");
             }else{
@@ -61,6 +61,7 @@ mod club_sem_rust {
                 }
             }
         }
+
         ///
 	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte
         ///
@@ -84,6 +85,7 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
     	    }
         }
+
         ///
         /// Recorre todos los Pagos completados de un Socio y crea un listado de recibos con los datos relevantes de cada Pago
         /// 
@@ -96,7 +98,7 @@ mod club_sem_rust {
                     if self.pagos[i].pendiente == false{
                         match self.pagos[i].fecha_pago{
                             Some(fe) => {
-                                let recibo = Recibo::new(self.nombre, self.dni, self.pagos[i].monto, self.id_categoria, fe );
+                                let recibo = Recibo::new(self.nombre.clone(), self.dni, self.pagos[i].monto, self.id_categoria, fe );
                                 recibos.push(recibo);    
                             },
                             None => panic!("Este Socio registra un Pago sin fecha")
@@ -108,6 +110,7 @@ mod club_sem_rust {
             }
             return recibos
         }
+
         ///
         /// Consulta el ultimo pago y devuelve true si está vencido y sin pagar
         /// Si devuelve true el socio se considera moroso
@@ -119,6 +122,7 @@ mod club_sem_rust {
                 panic!("Este socio no tiene pagos habidos ni por haber");
             }
         }
+
         ///
         /// Socio realiza un Pago, luego se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
         /// 
@@ -133,6 +137,7 @@ mod club_sem_rust {
                 panic!("Este socio no tiene pagos habidos ni por haber");
             }
         }
+
         ///
 	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificacion
         ///
@@ -153,6 +158,7 @@ mod club_sem_rust {
                 return true
             }
         }
+
         ///
 	    /// Permite al usuario cambiar su propia categoria
         ///
@@ -178,6 +184,7 @@ mod club_sem_rust {
                 }
             }
         }
+
         ///
 	    /// Devuelve todos los deportes que realiza un determinado Socio
         ///
@@ -191,6 +198,7 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
+
         ///
         /// Determina la categoria de un Socio
         /// Si el ID ingresado por parametro coincide con la categoria del Socio devuleve true
@@ -244,6 +252,18 @@ mod club_sem_rust {
         pub fn get_monto(&self) -> u128 {
             return self.monto;
         }
+
+        ///
+        /// Chequea si un Recibo fue realizado durante cierto período de tiempo.
+        /// Ese intervalo temporal se representa como [fecha_min ; fecha_max]
+        /// 
+        /// Si la fecha en la que se realizó el pago está dentro de ese intervalo, se devuelve true
+        /// Si la fecha está por fuera de ese intervalo, se devuelve false
+        /// 
+        pub fn fecha_entre(&self, fecha_min:Timestamp, fecha_max:Timestamp) -> bool {
+            return self.fecha >= fecha_min && self.fecha <= fecha_max;
+        }
+        // Metodo que necesitaba para Recaudacion en el contrato Gestor -L
     }
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
@@ -340,6 +360,7 @@ mod club_sem_rust {
                 self.a_tiempo = self.vencimiento > fecha;
             }
         }
+
     }
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
@@ -577,7 +598,7 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>) {
             let hoy = self.env().block_timestamp() + self.duracion_deadline;
-            let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy, self.precio_categorias);
+            let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy, &self.precio_categorias);
             self.socios.push(socio);
         }
         
@@ -595,11 +616,11 @@ mod club_sem_rust {
                 while (i as usize) < self.socios.len() && self.socios[i as usize].dni != dni{
                      i = i + 1;
                 }
-                if self.socios[i].dni != dni{
+                if self.socios[i as usize].dni != dni{
                     panic!("EL DNI INGRESADO NO ES VALIDO");
                 } else{
-                    if self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].pendiente = true {
-                        if self.socios[i as usize].cumple_bonificacion(){
+                    if self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].pendiente == true {
+                        if self.socios[i as usize].cumple_bonificacion(self.pagos_consecutivos_bono){
                             self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(Some(self.descuento), monto, hoy, self.precio_categorias);
                         }else{
                             self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(None, monto, hoy, self.precio_categorias);
@@ -610,8 +631,6 @@ mod club_sem_rust {
                     }
                 }
             }
-            
-           
         }
         
         #[ink(message)]
@@ -1257,12 +1276,7 @@ mod club_sem_rust {
 
             assert_eq!(pago.es_moroso(current_time), true);
 
-            /* metodo que verifique si el pago esta pendiente después de la fecha de vencimiento
-             nos va a servir a la hora de verificar los morosos - L */
-
         }
-
-
     }
 
 
