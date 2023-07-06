@@ -741,9 +741,6 @@ mod club_sem_rust {
             }
         }
         
-<<<<<<< HEAD
-         #[ink(message)]
-=======
         /// Agrega una cuenta al vector de cuentas habilitadas.
         /// 
         /// # Panics
@@ -754,7 +751,6 @@ mod club_sem_rust {
         ///     - El caller no esté en el vector de cuentas habilitadas.
         ///     - Ni sea owner el caller.
         #[ink(message)]
->>>>>>> deb223b (Modificada documentación.)
         pub fn agregar_cuenta(&mut self, id: AccountId) {
             match self.owner{
                 Some(a) =>{ if self.env().caller() == a {
