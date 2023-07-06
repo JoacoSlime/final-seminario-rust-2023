@@ -642,33 +642,26 @@ mod club_sem_rust {
         
         #[ink(message)]
         pub fn registrar_pago(&mut self, dni: u32, monto: u128) {
-            /*
-                - Busca el socio
-                - Toma el último pago
-                - Si no está pago:
-                    - Llama a realizar pago
-            */
             if self.esta_habilitada(self.env().caller()){
                 let hoy = self.env().block_timestamp();
+                let precios = self.precio_categorias.clone();
+                let deadline: Timestamp = hoy+self.get_duracion_deadline();
                 if self.socios.len() > 0{
-                    let mut i:i32 = 0;
-                    while (i as usize) < self.socios.len() && self.socios[i as usize].dni != dni{
-                         i = i + 1;
-                    }
-                    if self.socios[i as usize].dni != dni{
-                        panic!("EL DNI INGRESADO NO ES VALIDO");
-                    } else{
-                        if self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].pendiente == true {
-                            if self.socios[i as usize].cumple_bonificacion(self.pagos_consecutivos_bono){
-                                self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(Some(self.descuento), monto, hoy, self.precio_categorias);
+                    if let Some(i) = self.socios.iter().position(|s| s.dni == dni){
+                        if self.socios[i].pagos[self.socios[i].pagos.len() - 1].pendiente == true {
+                            if self.socios[i].cumple_bonificacion(self.pagos_consecutivos_bono){
+                                self.socios[i].realizar_pago(Some(self.descuento), monto, hoy, precios, deadline);
                             }else{
-                                self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(None, monto, hoy, self.precio_categorias);
+                                self.socios[i].realizar_pago(None, monto, hoy, precios, deadline);
                             }
-                            
                         }else{
-                            panic!("EL PAGO YA FUE REGISTRADO");
+                            panic!("No existe un Pago pendiente!");
                         }
+                    }else{
+                        panic!("El DNI ingresado no es válido!");
                     }
+                }else{
+                    panic!("No hay ningún socio registrado!");
                 }
             }else{
                 panic!("No está habilitado para realizar esta operación.")
