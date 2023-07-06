@@ -91,7 +91,7 @@ mod club_sem_rust {
         /// 
         /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
         /// 
-        pub fn generar_recibos(&mut self) -> Vec<Recibo> {
+        pub fn generar_recibos(&self) -> Vec<Recibo> {
             let mut recibos = Vec::new();
             if self.pagos.len() != 0 {
                 for i in 0..self.pagos.len(){
@@ -371,7 +371,6 @@ mod club_sem_rust {
                 self.a_tiempo = self.vencimiento > fecha;
             }
         }
-
     }
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
@@ -1018,6 +1017,79 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
+        #[ink::test]
+        #[should_panic(expected = "No hay ningún socio registrado!")]
+        fn registrar_pago_test_panic_socio() {
+            let mut club:ClubSemRust = ClubSemRust{
+                socios: Vec::new(),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            
+            club.registrar_pago(44044044, 2000);
+
+        }
+
+
+        #[ink::test]
+        #[should_panic(expected = "El DNI ingresado no es válido!")]
+        fn registrar_pago_test_panic_dni() {
+            let now = super::get_current_time();
+            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
+            let mut club = ClubSemRust{
+                socios: Vec::from([Socio{
+                    id_deporte: None,
+                    id_categoria: 3,
+                    dni: 44044044,
+                    nombre: "Juancito".to_string(),
+                    pagos: Vec::from([
+                        Pago::new(now + 864_000_000, 2000)
+                    ]),
+                }]),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            club.registrar_pago(44444444, 2000);
+
+        }
+
+
+        #[ink::test]
+        #[should_panic(expected = "No existe un Pago pendiente!")]
+        fn registrar_pago_test_panic_pago() {
+            let now = super::get_current_time();
+            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
+            let mut club = ClubSemRust{
+                socios: Vec::from([Socio{
+                    id_deporte: None,
+                    id_categoria: 3,
+                    dni: 44044044,
+                    nombre: "Juancito".to_string(),
+                    pagos: Vec::new(),
+                }]),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            club.registrar_pago(44044044, 2000);
+
+        }
+
+
+
+
+
         #[test]
         fn get_socios_test() {
             let now = super::get_current_time();
@@ -1169,8 +1241,8 @@ mod club_sem_rust {
             
         }
 
-        #[test]
-        fn esta_habilitada(){
+        #[ink::test]
+        fn esta_habilitada_test(){
             let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
             let club = ClubSemRust{
                 socios: Vec::new(),

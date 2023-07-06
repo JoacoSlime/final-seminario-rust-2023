@@ -50,9 +50,9 @@ mod gestor_de_cobros {
         /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
         /// 
         #[ink(message)]
-        pub fn recaudación(&self) -> Vec<u128> {
+        pub fn recaudación(&self) -> Vec<Recaudacion> {
             let socios:Vec<Socio> = self.club_sem_rust.get_socios();
-            let mut vec_recaudacion:Vec<u128> = Vec::new();
+            let mut vec_recaudacion:Vec<Recaudacion> = Vec::new();
 
             let fecha_hoy:Timestamp = self.env().block_timestamp();
             
