@@ -91,7 +91,7 @@ mod club_sem_rust {
         /// # Panic
         /// 
         /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
-        pub fn generar_recibos(&mut self) -> Vec<Recibo> {
+        pub fn generar_recibos(&self) -> Vec<Recibo> {
             let mut recibos = Vec::new();
             if self.pagos.len() != 0 {
                 for i in 0..self.pagos.len(){
@@ -754,7 +754,7 @@ mod club_sem_rust {
                 }},
                 None => panic!("NO HAY OWNER!"),
             }
-            }
+        }
             /* 
                if self.owners.iter().any(|owner_id| *owner_id == self.env().caller() ) {
                     self.cuentas_habilitadas.push(id);
@@ -766,7 +766,7 @@ mod club_sem_rust {
                 los simplemente "habilitados"
                                                 -L
              */
-        }
+        
 
         #[ink(message)]
         pub fn flip_bloqueo(&mut self) {

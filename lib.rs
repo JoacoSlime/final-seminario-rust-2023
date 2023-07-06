@@ -2,12 +2,10 @@
 
 #[ink::contract]
 mod gestor_de_cobros {
-    use alloc::vec;
     use club_sem_rust::Recibo;
-    use::ink::prelude::string;
-    use::ink::prelude::vec;
+    use club_sem_rust::Socio;
     use club_sem_rust::ClubSemRustRef;
-    use ink_e2e::env_logger::fmt::Timestamp;
+
     #[ink(storage)]
     pub struct GestorDeCobros {
         club_sem_rust: ClubSemRustRef,
@@ -21,11 +19,12 @@ mod gestor_de_cobros {
         }
 
         #[ink(message)]
-         pub fn socios_morosos(&self ) -> Vec<Socio> {
+         pub fn socios_morosos(&self) -> Vec<Socio> {
             let hoy = self.env().block_timestamp();
             let socios = self.club_sem_rust.get_socios();
-             let iter = socios.iter();
-             iter.filter(|s| s.es_moroso(hoy)).collect()
+            let socios = socios.iter()
+            .filter_map(|s| s.es_moroso(hoy)).collect();
+            return socios;
         }
 
         #[ink(message)]
@@ -35,7 +34,7 @@ mod gestor_de_cobros {
             let iter = socios.iter();
             iter.filter( |s|
                 s.puede_hacer_deporte(id_deporte) &&
-                !s.es_moroso()
+                !s.es_moroso(self.env().block_timestamp())
             ).collect()
         }
 
