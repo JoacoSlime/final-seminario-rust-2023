@@ -86,12 +86,16 @@ mod club_sem_rust {
     	    }
         }
 
-        ///
         /// Recorre todos los Pagos completados de un Socio y crea un listado de recibos con los datos relevantes de cada Pago
         /// 
-        /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
+        /// # Panic
         /// 
+<<<<<<< HEAD
         pub fn generar_recibos(&self) -> Vec<Recibo> {
+=======
+        /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
+        pub fn generar_recibos(&mut self) -> Vec<Recibo> {
+>>>>>>> 8235414 (Modificada documentación.)
             let mut recibos = Vec::new();
             if self.pagos.len() != 0 {
                 for i in 0..self.pagos.len(){
@@ -111,24 +115,28 @@ mod club_sem_rust {
             return recibos
         }
 
-        ///
         /// Consulta el ultimo pago y devuelve true si está vencido y sin pagar
         /// Si devuelve true el socio se considera moroso
         /// 
+        /// # Panic
+        /// 
+        /// El método puede dar panic en caso de que el socio no tenga pagos registrados.
         pub fn es_moroso(&self, current_time:Timestamp) -> bool {
             if let Some(ultimo_pago) = self.pagos.last(){
                 return ultimo_pago.es_moroso(current_time);
             }else{
-                panic!("Este socio no tiene pagos habidos ni por haber");
+                panic!("Este socio no tiene ningún pago registrado");
             }
         }
 
-        ///
         /// Socio realiza un Pago, luego se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
         /// 
         /// Socio siempre deberá tener un único Pago pendiente en el último índice de su lista de Pagos
         /// La creación de un nuevo Pago pendiente se da automáticamente una vez pagado el anterior
         /// 
+        /// # Panics
+        /// 
+        /// Este método puede dar panic en caso de que el socio no tenga pagos registrados.
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>, deadline:Timestamp){
             if let Some(i) = self.pagos.iter().position(|p| p.pendiente){
                 self.pagos[i].realizar_pago(descuento, monto, fecha);
@@ -138,12 +146,10 @@ mod club_sem_rust {
             }
         }
 
-        ///
 	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificacion
         ///
         /// Recibe por parametro la cantidad de pagos consecutivos que deben figurar como pagados "a tiempo" para aplicar la bonificacion
         /// cumple_bonificacion funciona como un shor-circuit. Al encontrar un pago que no cumple devuelve false y termina su ejecución
-        ///
         pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
             if self.pagos.len() < pagos_consecutivos as usize {
                 return false
@@ -159,7 +165,6 @@ mod club_sem_rust {
             }
         }
 
-        ///
 	    /// Permite al usuario cambiar su propia categoria
         ///
         /// Si el id_categoria y/o id_deporte ingresados son invalidos, no guarda ningun cambio y se genera un panic
@@ -168,6 +173,12 @@ mod club_sem_rust {
         /// Si se cambia a Categoria B debe setear id_Deporte = Some(...)
         /// Si se cambia a Categoria B id_Deporte != Some(2)
         ///
+        /// # Panics
+        /// 
+        /// Puede llegar a dar panic en caso de que:
+        /// - Se pasa un id_deporte 2 al cambiar a categoría B.
+        /// - No se pasa un id_deporte al cambiar a categoría B.
+        /// - Se elije un id_deporte al cambiar a categoría A o B.
         pub fn cambiar_categoria(&mut self, id_categoria: u32, id_deporte: Option<u32>) {
             if id_categoria == 2 && id_deporte == Some(2){
                 panic!("Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8");
@@ -185,11 +196,13 @@ mod club_sem_rust {
             }
         }
 
-        ///
 	    /// Devuelve todos los deportes que realiza un determinado Socio
         ///
         /// Si es de Categoria C, devuelve None
         ///
+        /// # Panics
+        /// 
+        /// Puede llegar a dar panic en caso de que el id_categoria sea mayor que 3 o menor que 1.
         pub fn get_mi_deporte(&self) -> Option<Vec<Deporte>>{
             match self.id_categoria {
                 3 => return None,
@@ -199,11 +212,10 @@ mod club_sem_rust {
             }
         }
 
-        ///
         /// Determina la categoria de un Socio
+        /// 
         /// Si el ID ingresado por parametro coincide con la categoria del Socio devuleve true
         /// Caso contrario devuelve false
-        /// 
         pub fn mi_categoria(&self, id_c:u32) -> bool {
             return self.id_categoria == id_c;
         }
@@ -497,6 +509,10 @@ mod club_sem_rust {
     
         /// Devuelve el deporte correspondiente a un id_deporte.
         /// 
+        /// # Panics
+        /// 
+        /// Puede dar panic en caso de que id_deporte sea mayor a 8 o menor a 1.
+        /// 
         /// # Ejemplo
         /// ```
         /// let deporte = Deporte::match_deporte(1);
@@ -577,8 +593,13 @@ mod club_sem_rust {
 
         /// Setea un nuevo precio de matricula mensual para cierta categoria.
         ///
-        /// Si el id_categoria pasado por parametro es invalido, no genera ningun cambio y ocurre un Panic!
-        ///
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - La categoría sea inválida.
+        /// - El bloqueo esté activado y:
+        ///     - El caller no esté en el vector de cuentas habilitadas.
+        ///     - Ni sea owner el caller.
         #[ink(message)]
         pub fn set_precio_categoria(&mut self, p_categoria: u128, id_categoria: u32) {
             if self.esta_habilitada(self.env().caller()){
@@ -593,11 +614,16 @@ mod club_sem_rust {
             }
         }
 
-        ///
 	    /// Setea una nueva duracion de deadline
         ///
         /// Si se modifica este atributo, las fechas de vencimiento a futuro tambien se correran
         ///
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - El bloqueo esté activado y:
+        ///     - El caller no esté en el vector de cuentas habilitadas.
+        ///     - Ni sea owner el caller.
         #[ink(message)]
         pub fn set_duracion_deadline(&mut self, d_deadline: Timestamp) {
             if self.esta_habilitada(self.env().caller()){
@@ -612,11 +638,15 @@ mod club_sem_rust {
             self.duracion_deadline
         }
 
-        ///
 	    /// Setea un porcentaje de descuento para los usuarios a los que aplica la bonificacion
         ///
-        /// Si se ingresa un porcentaje mayor a 100 o menor que 1, panics
-        ///
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - Se ingresa un porcentaje inválido.
+        /// - El bloqueo esté activado y:
+        ///     - El caller no esté en el vector de cuentas habilitadas.
+        ///     - Ni sea owner el caller.
         #[ink(message)]
         pub fn set_descuento(&mut self, descuento: u128) {
             if self.esta_habilitada(self.env().caller()){
@@ -630,11 +660,20 @@ mod club_sem_rust {
             }
         }
 
+        /// Establece el descuento aplicado a los pagos de socios con bono aplicable.
         #[ink(message)]
         pub fn get_descuento(&self) -> u128 {
             self.descuento
         }
         
+        /// Crea un nuevo socio y lo agrega al vector de socios.
+        /// 
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - El bloqueo esté activado y:
+        ///     - El caller no esté en el vector de cuentas habilitadas.
+        ///     - Ni sea owner el caller.
         #[ink(message)]
         pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>) {
             if self.esta_habilitada(self.env().caller()){
@@ -648,6 +687,17 @@ mod club_sem_rust {
         }
         
         #[ink(message)]
+
+        /// Busca al socio y realiza el pago de su último pago.
+        /// 
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - El DNI Ingresado sea invalido.
+        /// - El pago ya estuviera registrado.
+        /// - El bloqueo esté activado y:
+        ///     - El caller no esté en el vector de cuentas habilitadas.
+        ///     - Ni sea owner el caller.
         pub fn registrar_pago(&mut self, dni: u32, monto: u128) {
             if self.esta_habilitada(self.env().caller()){
                 let hoy = self.env().block_timestamp();
@@ -675,11 +725,13 @@ mod club_sem_rust {
             }
         }
         
+        /// Devuelve el vector de Socios.
         #[ink(message)]
         pub fn get_socios(&self) -> Vec<Socio> {
             self.socios.clone()
         }
         
+        /// Devuelve un Vector de todos los recibos generados.
         #[ink(message)]
         pub fn get_recibos(&self, dni: u32) -> Option<Vec<Recibo>> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
@@ -689,7 +741,20 @@ mod club_sem_rust {
             }
         }
         
+<<<<<<< HEAD
          #[ink(message)]
+=======
+        /// Agrega una cuenta al vector de cuentas habilitadas.
+        /// 
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - La categoría sea inválida.
+        /// - El bloqueo esté activado y:
+        ///     - El caller no esté en el vector de cuentas habilitadas.
+        ///     - Ni sea owner el caller.
+        #[ink(message)]
+>>>>>>> deb223b (Modificada documentación.)
         pub fn agregar_cuenta(&mut self, id: AccountId) {
             match self.owner{
                 Some(a) =>{ if self.env().caller() == a {
@@ -717,12 +782,10 @@ mod club_sem_rust {
             self.esta_bloqueado = !self.esta_bloqueado
         }
         
-        ///
         /// Retorna true si una cuenta está habilitada.
         ///
         /// Itera sobre el vector de AccountId de la estructura y devuelve true si encuentra 
         /// una cuenta que concuerde con el id pasado por parámetro
-        ///
         fn esta_habilitada(&self, id: AccountId) -> bool {
 
             /* 
@@ -743,7 +806,11 @@ mod club_sem_rust {
 
 
     
-
+    /// Magia negra.
+    /// 
+    /// Se supone que devuelve el Timestamp del tiempo actual.
+    /// 
+    /// SOLO PARA USO EN TESTS.
     pub fn get_current_time() -> Timestamp {
         let since_the_epoch = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
