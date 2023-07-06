@@ -27,18 +27,12 @@ mod club_sem_rust {
         pagos: Vec<Pago>,
     }
     impl Socio{
-        ///
         /// Construye un nuevo Socio con sus variables de a cuerdo a lo que le enviemos por parametro.
+        /// Empieza con un Pago pendiente
+        /// 
+        /// # Panic
         /// 
         /// Puede devolver panic sino se corresponde el id_deporte con la categoria.
-        /// Un Socio perteneciente a la Categoria A o C debe recibir un id_deporte = None
-        /// Un Socio perteneciente a la Categoria B debe recibir un id_Deporte = Some(...)
-        /// 
-        /// Un Socio perteneciente a la Categoria B no debe recibir un id_Deporte = Some(2)
-        /// Si lo hace devolverá panic, pues el id 2 representa a Gimnasio, que ya viene por defecto para la Categoria B
-        ///
-        /// Empieza con un Pago pendiente
-        ///
         pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: Vec<u128>) -> Socio {
             if id_categoria == 2 && id_deporte == None{
                 panic!("Categoria B debe elegir un deporte");
@@ -62,11 +56,17 @@ mod club_sem_rust {
             }
         }
 
-        ///
 	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte
         ///
         /// Recibe el id_deporte que se quiere verificar
         ///
+        /// # Ejemplo
+        /// ```
+        /// let precio_categorias = vec![5000,4000,2000];
+        /// let socio = Socio::new("Alice", 44044044, 2, 1, 0, precio_categorias);
+        /// let habilitado = socio.puede_hacer_deporte(1):
+        /// assert!(habilitado); 
+        /// ```
         pub fn puede_hacer_deporte(&self, id_deporte: u32) -> bool {
             match self.id_categoria {
             	1 => return true,
