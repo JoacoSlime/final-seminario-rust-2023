@@ -313,7 +313,7 @@ mod club_sem_rust {
             };
             Pago {
                 vencimiento,
-                categoria,
+                categoria: categoria.clone(),
                 monto: categoria.mensual(precio_categorias),
                 pendiente: true,
                 a_tiempo: false,
@@ -346,7 +346,7 @@ mod club_sem_rust {
         /// let precio_categorias = Vec::from([5000,3000,2000]);
         /// pago.realizar_pago(None, 5000, u64::default(), precio_categorias);
         /// ```
-        pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>) {
+        pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp) {
             if !self.pendiente {
                 panic!("El pago no está pendiente.");
             } else if !self.monto == monto {
