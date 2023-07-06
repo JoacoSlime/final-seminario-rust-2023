@@ -39,7 +39,7 @@ mod club_sem_rust {
         ///
         /// Empieza con un Pago pendiente
         ///
-        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: &Vec<u128>) -> Socio {
+        pub fn new(nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: Vec<u128>) -> Socio {
             if id_categoria == 2 && id_deporte == None{
                 panic!("Categoria B debe elegir un deporte");
             }else{
@@ -552,12 +552,16 @@ mod club_sem_rust {
         ///
         #[ink(message)]
         pub fn set_precio_categoria(&mut self, p_categoria: u128, id_categoria: u32) {
-        	if id_categoria > 0 && id_categoria < 4 {
-                    let i = id_categoria-1;
-            		self.precio_categorias[i as usize] = p_categoria;
-        	}else{
-            		panic!("SE INGRESÓ MAL LA CATEGORIA!!"); //panics! -L
-        	}
+            if self.esta_habilitada(self.env().caller()){
+                    if id_categoria > 0 && id_categoria < 4 {
+                        let i = id_categoria-1;
+                        self.precio_categorias[i as usize] = p_categoria;
+                }else{
+                        panic!("SE INGRESÓ MAL LA CATEGORIA!!");
+                }
+            }else{
+                panic!("No está habilitado para realizar esta operación.")
+            }
         }
 
         ///
@@ -567,7 +571,11 @@ mod club_sem_rust {
         ///
         #[ink(message)]
         pub fn set_duracion_deadline(&mut self, d_deadline: Timestamp) {
-            self.duracion_deadline = d_deadline;
+            if self.esta_habilitada(self.env().caller()){
+                self.duracion_deadline = d_deadline;
+            }else{
+                panic!("No está habilitado para realizar esta operación.")
+            }
         }
         
         #[ink(message)]
@@ -582,14 +590,17 @@ mod club_sem_rust {
         ///
         #[ink(message)]
         pub fn set_descuento(&mut self, descuento: u128) {
-        	if descuento > 0 && descuento < 101  {
+            if self.esta_habilitada(self.env().caller()){
+                if descuento > 0 && descuento < 101  {
             		self.descuento = descuento;
-        	}else{
-            		panic!("EL PORCENTAJE DE DESCUENTO INGRESADO ESTÁ MAL!"); // panics!
-        	}
+                }else{
+                    panic!("EL PORCENTAJE DE DESCUENTO INGRESADO ESTÁ MAL!"); // panics!
+                }
+            }else{
+                panic!("No está habilitado para realizar esta operación.")
+            }
         }
 
-        
         #[ink(message)]
         pub fn get_descuento(&self) -> u128 {
             self.descuento
@@ -597,9 +608,14 @@ mod club_sem_rust {
         
         #[ink(message)]
         pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, id_categoria: u32, id_deporte: Option<u32>) {
-            let hoy = self.env().block_timestamp() + self.duracion_deadline;
-            let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy, &self.precio_categorias);
-            self.socios.push(socio);
+            if self.esta_habilitada(self.env().caller()){
+                let hoy = self.env().block_timestamp() + self.duracion_deadline;
+                let precios = self.precio_categorias.clone();
+                let socio = Socio::new(nombre, dni, id_categoria, id_deporte, hoy, precios);
+                self.socios.push(socio);
+            }else{
+                panic!("No está habilitado para realizar esta operación.")
+            }
         }
         
         #[ink(message)]
@@ -610,26 +626,30 @@ mod club_sem_rust {
                 - Si no está pago:
                     - Llama a realizar pago
             */
-            let hoy = self.env().block_timestamp();
-            if self.socios.len() > 0{
-                let i:i32 = 0;
-                while (i as usize) < self.socios.len() && self.socios[i as usize].dni != dni{
-                     i = i + 1;
-                }
-                if self.socios[i as usize].dni != dni{
-                    panic!("EL DNI INGRESADO NO ES VALIDO");
-                } else{
-                    if self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].pendiente == true {
-                        if self.socios[i as usize].cumple_bonificacion(self.pagos_consecutivos_bono){
-                            self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(Some(self.descuento), monto, hoy, self.precio_categorias);
+            if self.esta_habilitada(self.env().caller()){
+                let hoy = self.env().block_timestamp();
+                if self.socios.len() > 0{
+                    let mut i:i32 = 0;
+                    while (i as usize) < self.socios.len() && self.socios[i as usize].dni != dni{
+                         i = i + 1;
+                    }
+                    if self.socios[i as usize].dni != dni{
+                        panic!("EL DNI INGRESADO NO ES VALIDO");
+                    } else{
+                        if self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].pendiente == true {
+                            if self.socios[i as usize].cumple_bonificacion(self.pagos_consecutivos_bono){
+                                self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(Some(self.descuento), monto, hoy, self.precio_categorias);
+                            }else{
+                                self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(None, monto, hoy, self.precio_categorias);
+                            }
+                            
                         }else{
-                            self.socios[i as usize].pagos[self.socios[i as usize].pagos.len() - 1].realizar_pago(None, monto, hoy, self.precio_categorias);
+                            panic!("EL PAGO YA FUE REGISTRADO");
                         }
-                        
-                    }else{
-                        panic!("EL PAGO YA FUE REGISTRADO");
                     }
                 }
+            }else{
+                panic!("No está habilitado para realizar esta operación.")
             }
         }
         
@@ -650,10 +670,22 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn agregar_cuenta(&mut self, id: AccountId) {
             todo!()
+            /* 
+               if self.owners.iter().any(|owner_id| *owner_id == self.env().caller() ) {
+                    self.cuentas_habilitadas.push(id);
+                } else {
+                    panic!("Solo un Owner está habilitado para realizar esta operación.")
+                }
+
+                esto es si consideramos a los owners como gente con mayores privilegios que 
+                los simplemente "habilitados"
+                                                -L
+             */
         }
 
         #[ink(message)]
         pub fn flip_bloqueo(&mut self) {
+            // if caller is owner
             self.esta_bloqueado = !self.esta_bloqueado
         }
         
@@ -664,6 +696,17 @@ mod club_sem_rust {
         /// una cuenta que concuerde con el id pasado por parámetro
         ///
         fn esta_habilitada(&self, id: AccountId) -> bool {
+
+            /* 
+                
+                if self.esta_bloqueado == false { return true }
+                else { self.cuentas_habilitadas.iter().any(|account_id| *account_id == id) }
+
+                Porque si esta no está bloqueado, cualquier cuenta tiene acceso a todo,
+                Si está bloqueado, se usa el protocolo de callers con permisos
+
+             */
+
             self.cuentas_habilitadas.iter().any(|account_id| *account_id == id)
         }
     }

@@ -38,12 +38,12 @@ mod gestor_de_cobros {
         }
 
         ///
-        /// Genera un vector con la recaudacion del mes actual para cada Categoría,
-        /// esto significa, la suma de los montos pagados en un mes de todos los Recibos
-        /// de los Socios de cada Categoría.
+        /// Genera un vector con la recaudacion de cada Categoría durante el transcurso de un mes,
+        /// esto significa, la suma de todos los montos pagados a lo largo de 30 dias
+        /// de todos los Recibos clasificados por Categorías. 
         /// 
         /// Se considera el paso de 30 días como el paso de un mes.
-        /// Y 2_592_000_000 representa 30 dias para el tipo Timestamp.
+        /// 2_592_000_000 representa 30 dias para el tipo Timestamp.
         /// 
         /// Se contará la Recaudación para cada una de las tres Categorías
         /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
