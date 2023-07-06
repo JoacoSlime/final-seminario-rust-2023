@@ -27,7 +27,9 @@ mod gestor_de_cobros {
              let iter = socios.iter();
              iter.filter(|s| s.es_moroso(hoy)).collect()
         }
+
         #[ink(message)]
+        /// Devuelve un vector con la lista de aquellos socios no morosos que tengan el deporte correspondiente a la id_deporte.
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
             let socios = self.club_sem_rust.get_socios();
             let iter = socios.iter();
@@ -37,7 +39,6 @@ mod gestor_de_cobros {
             ).collect()
         }
 
-        ///
         /// Genera un vector con la recaudacion de cada Categoría durante el transcurso de un mes,
         /// esto significa, la suma de todos los montos pagados a lo largo de 30 dias
         /// de todos los Recibos clasificados por Categorías. 

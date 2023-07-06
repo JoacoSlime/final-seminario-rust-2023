@@ -228,6 +228,7 @@ mod club_sem_rust {
         /// Puede llegar a dar panic por Categoria::match_categoria(id_categoria).
         /// 
         /// # Ejemplo
+        /// 
         /// ```
         /// let nombre = String::from("Alice"); 
         /// let recibo = Recibo::new(nombre, u32::default(), u128::default(), 1, u64::default());
@@ -241,9 +242,11 @@ mod club_sem_rust {
                 fecha,
             }
         }
+        
         /// Devuleve el monto de un Recibo
         /// 
         /// # Ejemplo
+        /// 
         /// ```
         /// let nombre = String::from("Alice");
         /// let recibo = Recibo::new(nombre, u32::default(), 5000, 1, u64::default());
@@ -252,14 +255,19 @@ mod club_sem_rust {
         pub fn get_monto(&self) -> u128 {
             return self.monto;
         }
-
-        ///
+        
         /// Chequea si un Recibo fue realizado durante cierto período de tiempo.
-        /// Ese intervalo temporal se representa como [fecha_min ; fecha_max]
         /// 
         /// Si la fecha en la que se realizó el pago está dentro de ese intervalo, se devuelve true
         /// Si la fecha está por fuera de ese intervalo, se devuelve false
         /// 
+        /// # Ejemplo
+        /// ```
+        /// let fecha_min = 1000;
+        /// let fecha_max = 2000;
+        /// let socio = Recibo::new("Alice", 44044044, 5000, 1, 1500);
+        /// let entre = socio.fecha_entre(fecha_min, fecha_max);
+        /// ```
         pub fn fecha_entre(&self, fecha_min:Timestamp, fecha_max:Timestamp) -> bool {
             return self.fecha >= fecha_min && self.fecha <= fecha_max;
         }
@@ -293,7 +301,6 @@ mod club_sem_rust {
         /// ```
         /// let pago = Pago::new(u64::default(), 1);
         /// ```
-        /// 
         pub fn new(vencimiento:Timestamp, id_categoria: u32,
              descuento: Option<u128>, precio_categorias: Vec<u128>) -> Pago {
             let categoria = Categoria::new(id_categoria);
@@ -340,6 +347,10 @@ mod club_sem_rust {
         /// 
         /// Verifica que el monto a pagar sea el correcto y que el pago esté pendiente, luego camabia el estado del pago a pagado. 
         /// 
+        /// # Panics
+        /// 
+        /// Puede llegar a dar panic si el pago no está pendiente, o el monto pagado es diferente al monto a pagar.
+        /// 
         /// # Ejemplo
         /// ```
         /// let pago = Pago::new(u64::default()+1, 1);
@@ -374,15 +385,15 @@ mod club_sem_rust {
         C,
     }
     impl Categoria {
-        ///
         /// Construye una Categoría a partir del ID ingresado por parámetro.
+        /// 
+        /// # Panics
         /// 
         /// Puede devolver panic si el ID ingresado está por fuera del rango establecido
         /// 
         /// Categoría A --> ID = 1
         /// Categoría B --> ID = 2
         /// Categoría C --> ID = 3
-        ///
         pub fn new(id_categoria:u32) -> Categoria {
             match id_categoria {
                 1 => Self::A,
@@ -391,15 +402,16 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
-        ///
+        
         /// Recibe por parametro un id_categoria y devuelve el tipo Categoria que le corresponde
+        /// 
+        /// # Panic
         /// 
         /// Puede devolver panic si el ID ingresado está por fuera del rango establecido
         ///
         /// Categoría A --> ID = 1
         /// Categoría B --> ID = 2
         /// Categoría C --> ID = 3
-        ///
         pub fn match_categoria(id_categoria: u32) -> Self {
             match id_categoria {
                 1 => Self::A,
@@ -408,7 +420,7 @@ mod club_sem_rust {
                 _ => panic!("ID de categoría inválido, por favor revise el socio."),
             }
         }
-        ///
+
         /// Consulta y devuelve el deporte que le corresponde categoria
         /// 
         /// Todas las categorías pueden acceder al Gimnasio por defecto.
@@ -418,8 +430,10 @@ mod club_sem_rust {
         /// Categoría C --> No practica deportes por fuera del Gimnasio
         ///
         /// Recibe por parametro un Option<u32> del id_deporte
+        /// 
+        /// # Panic
+        /// 
         /// Puede devolver panic si se envia por parámetro un id_deporte = None siendo la categoría actual Categoría B
-        ///
         pub fn get_deporte(&self, id_deporte: Option<u32>) -> Option<Vec<Deporte>> {
             match self {
                 Self::A => Some(Deporte::get_deportes()),
@@ -433,11 +447,10 @@ mod club_sem_rust {
                 Self::C => None,
             }
         }
-        ///  
+
         /// Consulta y devuelve el precio de la categoría de acuerdo a la lista de precios asignada por el contrato
         ///
         /// Recibe por parametro la lista de precios, el indice se corresponde con el precio correspondiente a la categoría
-        ///
         pub fn mensual(&self, precio_categorias: Vec<u128>) -> u128 {
             match self {
                 Categoria::A => precio_categorias[0],
@@ -463,11 +476,13 @@ mod club_sem_rust {
         Paddle
     }
     impl Deporte {
-        ///
         /// Devuelve el vector de todos los deportes existentes.
         ///
-        /// TODO: Explicación a rellenear por el implementador el método
-        ///
+        /// # Ejemplo
+        /// ```
+        /// let deportes = Deporte::get_deportes();
+        /// assert_eq!(deportes.len()-1, Deporte::Paddle);
+        /// ```
         pub fn get_deportes() -> Vec<Deporte> {
             vec![
                 Self::Futbol,
@@ -481,6 +496,13 @@ mod club_sem_rust {
             ]
         }
     
+        /// Devuelve el deporte correspondiente a un id_deporte.
+        /// 
+        /// # Ejemplo
+        /// ```
+        /// let deporte = Deporte::match_deporte(1);
+        /// assert_eq!(deporte, Deporte::Futbol);
+        /// ```
         pub fn match_deporte(id_deporte: u32) -> Self {
             match id_deporte {
                 1 => Self::Futbol,
