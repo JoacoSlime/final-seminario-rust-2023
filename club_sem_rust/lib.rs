@@ -90,12 +90,8 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-<<<<<<< HEAD
-        pub fn generar_recibos(&self) -> Vec<Recibo> {
-=======
         /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
         pub fn generar_recibos(&mut self) -> Vec<Recibo> {
->>>>>>> 8235414 (Modificada documentación.)
             let mut recibos = Vec::new();
             if self.pagos.len() != 0 {
                 for i in 0..self.pagos.len(){
