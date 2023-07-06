@@ -546,12 +546,13 @@ mod club_sem_rust {
         pagos_consecutivos_bono: u32,
         cuentas_habilitadas: Vec<AccountId>,
         esta_bloqueado: bool,
+        owner:Option<AccountId>,
     }
 
     impl ClubSemRust {
         #[ink(constructor)]
         pub fn new(descuento: u128, duracion_deadline: Timestamp, precio_categoria_a: u128, precio_categoria_b: u128, precio_categoria_c: u128, pagos_consecutivos_bono: u32) -> Self {
-            Self {
+            let mut club = Self {
                 socios: Vec::new(),
                 descuento,
                 duracion_deadline,
@@ -559,9 +560,16 @@ mod club_sem_rust {
                 pagos_consecutivos_bono,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false,
-            }
+                owner:None,
+            };
+            club
         }
-
+	    
+         #[ink(message)]
+        pub fn transfer_account(&mut self, owner:Option<AccountId>){
+            self.owner = owner;
+        }
+	    
         #[ink(constructor)]
         pub fn default() -> Self {
             // 864_000_000 es 10 días 
@@ -682,9 +690,15 @@ mod club_sem_rust {
             }
         }
         
-        #[ink(message)]
+         #[ink(message)]
         pub fn agregar_cuenta(&mut self, id: AccountId) {
-            todo!()
+            match self.owner{
+                Some(a) =>{ if self.env().caller() == a {
+                    self.cuentas_habilitadas.push(id);
+                }},
+                None => panic!("NO HAY OWNER!"),
+            }
+            }
             /* 
                if self.owners.iter().any(|owner_id| *owner_id == self.env().caller() ) {
                     self.cuentas_habilitadas.push(id);
