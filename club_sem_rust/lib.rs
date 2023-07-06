@@ -131,7 +131,7 @@ mod club_sem_rust {
         /// 
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>, deadline:Timestamp){
             if let Some(i) = self.pagos.iter().position(|p| p.pendiente){
-                self.pagos[i].realizar_pago(descuento, monto, fecha, precio_categorias);
+                self.pagos[i].realizar_pago(descuento, monto, fecha);
                 self.pagos.push(Pago::new(fecha+deadline, self.id_categoria, descuento, precio_categorias));
             }else{
                 panic!("Este socio no tiene pagos habidos ni por haber");
