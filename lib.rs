@@ -61,12 +61,7 @@ mod gestor_de_cobros {
             
             let closure = |s: &Socio, n: u32| {
                 if s.mi_categoria(n) {
-                    let r = s.generar_recibos();
-                    if r.is_empty() {
-                        None
-                    } else {
-                        Some(r)
-                    }
+                    s.generar_recibos();
                 } else {
                     None
                 }
