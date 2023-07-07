@@ -18,20 +18,24 @@ mod gestor_de_cobros {
             Self { allowed_accounts: Vec::new(), club_sem_rust}
         }
 
+        fn get_socios(&self) -> Vec<Socio> {
+            self.club_sem_rust.get_socios()
+        }
+
         #[ink(message)]
          pub fn socios_morosos(&self) -> Vec<Socio> {
             let hoy = self.env().block_timestamp();
-            let socios = self.club_sem_rust.get_socios();
-            let socios = socios.iter()
-            .filter_map(|s| s.es_moroso(hoy)).collect();
+            let socios = self.get_socios();
+            let socios = socios.into_iter()
+            .filter(|s| s.es_moroso(hoy)).collect();
             return socios;
         }
 
         #[ink(message)]
         /// Devuelve un vector con la lista de aquellos socios no morosos que tengan el deporte correspondiente a la id_deporte.
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
-            let socios = self.club_sem_rust.get_socios();
-            let iter = socios.iter();
+            let socios = self.get_socios();
+            let iter = socios.into_iter();
             iter.filter( |s|
                 s.puede_hacer_deporte(id_deporte) &&
                 !s.es_moroso(self.env().block_timestamp())
@@ -50,42 +54,48 @@ mod gestor_de_cobros {
         /// 
         #[ink(message)]
         pub fn recaudación(&self) -> Vec<Recaudacion> {
-            let socios:Vec<Socio> = self.club_sem_rust.get_socios();
+            let socios:Vec<Socio> = self.get_socios();
             let mut vec_recaudacion:Vec<Recaudacion> = Vec::new();
 
             let fecha_hoy:Timestamp = self.env().block_timestamp();
             
+            let closure = |s: &Socio, n: u32| {
+                if s.mi_categoria(n) {
+                    let r = s.generar_recibos();
+                    if r.is_empty() {
+                        None
+                    } else {
+                        Some(r)
+                    }
+                } else {
+                    None
+                }
+            };
 
-            let recibos_categoria_a:Vec<Recibo> = socios.iter()
-            .filter(|s| s.mi_categoria(1))
-            .map(|s| s.generar_recibos())
-            .collect();
+            let recibos_categoria_a: Vec<Recibo> = socios.iter()
+            .filter_map(|s| closure(s,1)).flatten().collect();
             let recaudacion_categoria_a:u128 = recibos_categoria_a.iter()
             .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
             .map(|r| r.get_monto())
-            .count();
+            .count() as u128;
 
             let recaudacion_a: Recaudacion = Recaudacion::new(recaudacion_categoria_a, fecha_hoy, 1);
             
             let recibos_categoria_b:Vec<Recibo> = socios.iter()
-            .filter(|s| s.mi_categoria(2))
-            .map(|s| s.generar_recibos())
-            .collect();
+            .filter_map(|s| closure(s,2)).flatten().collect();
             let recaudacion_categoria_b:u128 = recibos_categoria_b.iter()
             .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
             .map(|r| r.get_monto())
-            .count();
+            .count() as u128;
 
             let recaudacion_b: Recaudacion = Recaudacion::new(recaudacion_categoria_b, fecha_hoy, 2);
 
             let recibos_categoria_c:Vec<Recibo> = socios.iter()
-            .filter(|s| s.mi_categoria(3))
-            .map(|s| s.generar_recibos())
-            .collect();
+            .filter_map(|s| closure(s,3)).flatten().collect();
             let recaudacion_categoria_c:u128 = recibos_categoria_c.iter()
             .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
             .map(|r| r.get_monto())
-            .count();
+            .count() as u128;
 
             let recaudacion_c: Recaudacion = Recaudacion::new(recaudacion_categoria_c, fecha_hoy, 3);
 
@@ -115,6 +125,7 @@ mod gestor_de_cobros {
                 1 => Recaudacion { monto, fecha, categoria: "Categoria A".to_string() },
                 2 => Recaudacion { monto, fecha, categoria: "Categoria B".to_string() },
                 3 => Recaudacion { monto, fecha, categoria: "Categoria C".to_string() },
+                _ => panic!("Categoría inválida."),
             }
         }
     }

@@ -12,7 +12,6 @@ pub use self::club_sem_rust::{ClubSemRustRef, Recibo, Socio};
 mod club_sem_rust {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
-    //use ink_e2e::env_logger::fmt::Timestamp;
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
@@ -888,7 +887,7 @@ mod club_sem_rust {
             let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(9));
             assert!(
                 match resultado {
-                    Ok(_) => panic!("Panic no es el correcto."),
+                    Ok(_) => panic!("No hubo panic."),
                     Err(e) => assert_eq!(e, "Id del deporte inválido, revise el ID del socio."),
                 }
             );
@@ -907,6 +906,7 @@ mod club_sem_rust {
                 precio_categorias: vec![400, 300, 200],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 10,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -923,6 +923,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -954,6 +955,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -986,6 +988,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1012,6 +1015,7 @@ mod club_sem_rust {
                 precio_categorias,
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1039,6 +1043,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1067,6 +1072,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1085,6 +1091,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1113,6 +1120,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1138,6 +1146,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1182,6 +1191,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1246,6 +1256,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: None,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1261,12 +1272,14 @@ mod club_sem_rust {
         #[test]
         fn agregar_cuenta_test() {
             let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            ink::env::test::set_caller(1);
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: Some(1),
                 cuentas_habilitadas: Vec::from([
                     accounts.alice,
                     accounts.bob,
@@ -1284,12 +1297,14 @@ mod club_sem_rust {
 
         #[test]
         fn flip_bloqueo_test(){
+            ink::env::test::set_caller(1);
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: 1,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: true
             };
@@ -1309,6 +1324,7 @@ mod club_sem_rust {
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
+                owner: 1,
                 cuentas_habilitadas: Vec::from([
                     accounts.alice,
                     accounts.bob,
@@ -1318,6 +1334,7 @@ mod club_sem_rust {
             assert!(!club.esta_habilitada(accounts.charlie));
             assert!(club.esta_habilitada(accounts.alice));
             assert!(club.esta_habilitada(accounts.bob));
+            assert!(club.esta_habilitada(1));
         }
     }
 
