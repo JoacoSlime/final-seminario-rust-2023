@@ -825,8 +825,11 @@ mod club_sem_rust {
         /// Bloquea la estructura para que solo pueda ser modificada por las cuentas habilitadas o el owner
         #[ink(message)]
         pub fn flip_bloqueo(&mut self) {
-            // if caller is owner
+            if Some(self.env().caller()) == self.owner {
             self.esta_bloqueado = !self.esta_bloqueado
+            } else {
+                panic!("NO ES EL OWNER!");
+            }
         }
         
         /// Retorna true si una cuenta está habilitada.
