@@ -802,23 +802,20 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn agregar_cuenta(&mut self, id: AccountId) {
             match self.owner{
-                Some(a) =>{ if self.env().caller() == a {
+                Some(o) => {
+                    if self.env().caller() == o {
+                        if !self.cuentas_habilitadas.iter().any(|a| *a == id){
                     self.cuentas_habilitadas.push(id);
-                }},
+                        } else {
+                            panic!("La cuenta ya está habilitada");
+                        };
+                    } else {
+                        panic!("El caller no es el owner.");
+                    }
+                },
                 None => panic!("NO HAY OWNER!"),
             }
         }
-            /* 
-               if self.owners.iter().any(|owner_id| *owner_id == self.env().caller() ) {
-                    self.cuentas_habilitadas.push(id);
-                } else {
-                    panic!("Solo un Owner está habilitado para realizar esta operación.")
-                }
-
-                esto es si consideramos a los owners como gente con mayores privilegios que 
-                los simplemente "habilitados"
-                                                -L
-             */
         
 
         /// Bloquea la estructura para que solo pueda ser modificada por las cuentas habilitadas o el owner
