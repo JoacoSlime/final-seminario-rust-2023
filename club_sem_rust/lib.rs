@@ -590,6 +590,9 @@ mod club_sem_rust {
         /// Puede dar panic si el descuento es mayor a 100
         #[ink(constructor)]
         pub fn new(descuento: u128, duracion_deadline: Timestamp, precio_categoria_a: u128, precio_categoria_b: u128, precio_categoria_c: u128, pagos_consecutivos_bono: u32) -> Self {
+            if descuento > 100 {
+                panic!("Porcentaje de descuento inválido");
+            };
             let mut club = Self {
                 socios: Vec::new(),
                 descuento,
