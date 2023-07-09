@@ -796,10 +796,9 @@ mod club_sem_rust {
         /// # Panics
         /// 
         /// Puede ocurrir un panic en caso de que:
-        /// - La categoría sea inválida.
-        /// - El bloqueo esté activado y:
-        ///     - El caller no esté en el vector de cuentas habilitadas.
-        ///     - Ni sea owner el caller.
+        /// - No sea owner el caller.
+        /// - No haya owner.
+        /// - Ya exista la cuenta.
         #[ink(message)]
         pub fn agregar_cuenta(&mut self, id: AccountId) {
             match self.owner{
