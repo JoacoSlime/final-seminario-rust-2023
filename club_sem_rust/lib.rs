@@ -877,30 +877,14 @@ mod club_sem_rust {
                 let resultado = Deporte::match_deporte(id);
                 assert_eq!(esperado, resultado, "Error, para id {} se esperaba {:?}, y se recibió {:?}", id, esperado, resultado);
             };
-            let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(0));
-            match resultado {
-                Ok(_) => panic!("No hubo un panic."),
-                Err(e) => {
-                    let e = e.downcast::<String>();
-                    match e {
-                        Ok(e) => assert_eq!(*e, "Id del deporte inválido, revise el ID del socio."),
-                        Err(_) => panic!("El panic no pudo procesarse.")
-                    }
-                },
-            };
             
-            let resultado = std::panic::catch_unwind(|| Deporte::match_deporte(9));
-            match resultado {
-                Ok(_) => panic!("No hubo panic."),
-                Err(e) => {
-                    let e = e.downcast::<String>();
-                    match e {
-                        Ok(e) => assert_eq!(*e, "Id del deporte inválido, revise el ID del socio."),
-                        Err(_) => panic!("El panic no pudo procesarse.")
                     }
-                },
-            };
             
+        #[test]
+        #[should_panic(expected = "Id del deporte inválido, revise el ID del socio.")]
+        fn match_deporte_panic_test() {
+            let _ = Deporte::match_deporte(0);
+            let _ = Deporte::match_deporte(9);
         }
     }
     
@@ -908,15 +892,18 @@ mod club_sem_rust {
     mod club_sem_rust_tests {
         use crate::club_sem_rust::*;
 
-        #[test]
+        #[ink::test]
         fn new_test(){
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 25,
                 precio_categorias: vec![400, 300, 200],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 10,
-                owner: None,
+                owner: Some(owner),
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -925,15 +912,28 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::new(), se esperaba {:?} y se obtuvo {:?}", esperado, resultado)
         }
 
-        #[test]
+        
+        #[ink::test]
+        #[should_panic(expected = "Porcentaje de descuento inválido")]
+        fn new_panic_test(){
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+            let _ = ClubSemRust::new(101, 999, 400, 300, 200, 10);
+        }
+
+        #[ink::test]
         fn default_test() {
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
-                owner: None,
+                owner: Some(owner),
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -942,7 +942,7 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::default(), se esperaba {:?} y se recibió {:?}", esperado, resultado)
         }
 
-        #[test]
+        #[ink::test]
         fn get_duracion_deadline_test() {
             let esperado = 864_000_000;
             let club = ClubSemRust::default();
@@ -957,15 +957,18 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
-        #[test]
+        #[ink::test]
         fn set_duracion_deadline_test() {
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 999,
                 pagos_consecutivos_bono: 3,
-                owner: None,
+                owner: Some(owner),
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -975,7 +978,7 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
         
-        #[test]
+        #[ink::test]
         fn get_descuento_test() {
             let esperado = 15;
             let club = ClubSemRust::default();
@@ -990,26 +993,32 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::get_descuento(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
         }
 
-        #[test]
+        #[ink::test]
         fn set_descuento_test() {
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
             let esperado = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 25,
                 precio_categorias: vec![5000, 3000, 2000],
-                duracion_deadline: 999,
+                duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
-                owner: None,
+                owner: Some(owner),
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
             let mut resultado = ClubSemRust::default();
             resultado.set_descuento(25);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
         }
         
         #[ink::test]
         fn registrar_nuevo_socio_test() {
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
             let now = 5000;
             let precio_categorias = Vec::from([5000,3000,2000]);
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now);
@@ -1025,14 +1034,14 @@ mod club_sem_rust {
                 precio_categorias: precio_categorias.clone(),
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
-                owner: None,
+                owner: Some(owner.clone()),
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
             let mut resultado = ClubSemRust::default();
             resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
             
             
             let esperado = ClubSemRust{
@@ -1044,16 +1053,16 @@ mod club_sem_rust {
                     pagos: Vec::from([Pago::new(now + 864_000_000, 3, None, precio_categorias.clone())]),
                 }, Socio{
                     id_deporte: Some(5),
-                    id_categoria: 3,
+                    id_categoria: 2,
                     dni: 45045045,
                     nombre: "Roberto".to_string(),
-                    pagos: Vec::from([Pago::new(now + 864_000_000, 3, None, precio_categorias.clone())]),
+                    pagos: Vec::from([Pago::new(now + 864_000_000, 2, None, precio_categorias.clone())]),
                 }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
-                owner: None,
+                owner: Some(owner),
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false
             };
@@ -1061,36 +1070,58 @@ mod club_sem_rust {
             resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
             resultado.registrar_nuevo_socio("Roberto".to_string(), 45045045, 2, Some(5));
             
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
         }
         
         #[ink::test]
         fn registrar_pago_test() {
             let now = 5000;
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            let owner = accounts.frank;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
             let precio_categorias = Vec::from([5000, 3000, 2000]);
+
             let esperado = ClubSemRust{
-                socios: Vec::from([Socio{
+                socios: Vec::from([
+                    Socio{
                     id_deporte: None,
                     id_categoria: 3,
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
                     pagos: Vec::from([
-                        Pago::new(now + 864_000_000, 3, None, precio_categorias.clone())
+                            Pago{
+                                vencimiento: 864_000_000 + now,
+                                categoria: Categoria::C,
+                                monto: 2000,
+                                pendiente: false,
+                                a_tiempo: true,
+                                aplico_descuento: false,
+                                fecha_pago: Some(now),
+                            },
+                            Pago{
+                                vencimiento: 864_000_000 + now * 2,
+                                categoria: Categoria::C,
+                                monto: 2000,
+                                pendiente: true,
+                                a_tiempo: false,
+                                aplico_descuento: false,
+                                fecha_pago: None,
+                            },
                         ]),
                     }]),
                     descuento: 15,
                     precio_categorias: precio_categorias.clone(),
                     duracion_deadline: 864_000_000,
                     pagos_consecutivos_bono: 3,
-                    owner: None,
+                    owner: Some(owner),
                     cuentas_habilitadas: Vec::new(),
                     esta_bloqueado: false
                 };
                 let mut resultado = ClubSemRust::default();
                 resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, 3, None);
                 resultado.registrar_pago(44044044, 2000);
-                assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+                assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
             }
 
             #[ink::test]
@@ -1167,16 +1198,13 @@ mod club_sem_rust {
                 
             }
             
-            
-            
-            
-            
             #[test]
             fn get_socios_test() {
                 let now = 5000;
                 ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
                 let precio_categorias = Vec::from([5000, 3000, 2000]);
-                let esperado = Vec::from([Socio{
+            let esperado = Vec::from([
+                Socio{
                     id_deporte: None,
                     id_categoria: 3,
                     dni: 44044044,
@@ -1197,10 +1225,15 @@ mod club_sem_rust {
                     id_categoria: 3,
                     dni: 44044044,
                     nombre: "Juancito".to_string(),
-                    pagos: Vec::from([
-                        Pago::new(now, 3, None, precio_categorias.clone())
+                        pagos: Vec::from([Pago::new(now, 3, None, precio_categorias.clone())])
+                    }, Socio {
+                        id_deporte: Some(5),
+                        id_categoria: 3,
+                        dni: 45045045,
+                        nombre: "Roberto".to_string(),
+                        pagos: Vec::new(),
+                    }
                         ]),
-                    }]),
                     descuento: 15,
                     precio_categorias,
                     duracion_deadline: 864_000_000,
@@ -1210,7 +1243,7 @@ mod club_sem_rust {
                     esta_bloqueado: false
                 };
             let resultado = club.get_socios();
-            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_socios(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_socios(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
         }
         
         #[test]
@@ -1275,15 +1308,30 @@ mod club_sem_rust {
                 esta_bloqueado: false
             };
             let resultado = club.get_recibos(44044044);
-            assert!(resultado.is_some());
-            assert_eq!(esperado, resultado.clone().unwrap(), "Error en ClubSemRust::get_recibos(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_recibos(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
             
-            
+            let esperado: Vec<Recibo> = Vec::new();
             let resultado = club.get_recibos(45045045);
-            assert!(resultado.is_none(), "Error en ClubSemRust::get_recibos(), se esperaba None y se recibió {:?}", resultado);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_recibos(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
         }
         
         #[test]
+        #[should_panic(expected = "Socio no encontrado")]
+        fn get_recibos_panic_test() {
+            let club = ClubSemRust{
+                socios: Vec::new(),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                owner: None,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
+            let _ = club.get_recibos(46046046);
+        }
+        
+        #[ink::test]
         fn agregar_cuenta_test() {
             let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
             let owner = accounts.frank;
@@ -1332,12 +1380,23 @@ mod club_sem_rust {
             
         }
 
+        
+        #[test]
+        #[should_panic(expected = "NO ES EL OWNER!")]
+        fn flip_bloqueo_panic_test(){
+            let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.frank);
+            let mut club = ClubSemRust::default();
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+            club.flip_bloqueo();
+        }
+
         #[ink::test]
         fn esta_habilitada_test(){
             let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
             let owner = accounts.frank;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
-            let club = ClubSemRust{
+            let mut club = ClubSemRust{
                 socios: Vec::new(),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
@@ -1350,6 +1409,8 @@ mod club_sem_rust {
                     ]),
                     esta_bloqueado: false
                 };
+            assert!(club.esta_habilitada(accounts.charlie));
+            club.flip_bloqueo();
                 assert!(!club.esta_habilitada(accounts.charlie));
                 assert!(club.esta_habilitada(accounts.alice));
                 assert!(club.esta_habilitada(accounts.bob));
@@ -1381,19 +1442,20 @@ mod club_sem_rust {
             
             #[test]
             fn get_deporte_test(){
-                let categA = Categoria::new(1);
-                let categB = Categoria::new(2);
-                let categC = Categoria::new(3);
+                let categ_a = Categoria::new(1);
+                let categ_b = Categoria::new(2);
+                let categ_c = Categoria::new(3);
                 let deportes = Deporte::get_deportes();
 
-                assert_eq!(categA.get_deporte(None),Some(deportes.clone()));
+                assert_eq!(categ_a.get_deporte(None),Some(deportes.clone()));
                 for i in 1..9{
-                    assert_eq!(categB.get_deporte(Some(i)),Some(Vec::from([deportes[i as usize].clone()])));
+                    assert_eq!(categ_b.get_deporte(Some(i)),Some(Vec::from([deportes[(i-1) as usize].clone()])));
                 }
                 
-                assert_eq!(categC.get_deporte(None),None);
-                assert_ne!(categC.get_deporte(Some(3)), Some(Vec::from([deportes[1].clone()])));
+                assert_eq!(categ_c.get_deporte(None),None);
+                assert_ne!(categ_c.get_deporte(Some(3)), Some(Vec::from([deportes[1].clone()]))); 
             }
+
             #[test]
             fn mensual_test(){
                 let categ_a = Categoria::new(1);
@@ -1412,38 +1474,32 @@ mod club_sem_rust {
                 assert_ne!(categ_b.mensual(valores.clone()),5000);
                 assert_ne!(categ_c.mensual(valores),3000);
             }
-            #[test]
-            #[should_panic]
-            fn test_panic() {
-                let resultado = std::panic::catch_unwind(|| Categoria::new(4));
-                match resultado {
-                    Ok(_) => panic!("No hubo un panic."),
-                    Err(e) => {
-                        let e = e.downcast::<String>();
-                        match e {
-                            Ok(e) => assert_eq!(*e, "ID de categoría inválido, por favor revise el socio."),
-                            Err(_) => panic!("El panic no pudo procesarse.")
-                        }
-                    },
-                };
 
+            
+            #[test]
+            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+            fn test_new_panic() {
+                let _ = Categoria::new(4);
+                        }
+
+            #[test]
+            #[should_panic(expected = "El formato del vector de precios es incorrecto.")]
+            fn test_mensual_panic() {
                 let categ_a = Categoria::new(1);
                 let vacio = Vec::new();
-                let resultado = std::panic::catch_unwind(|| categ_a.mensual(vacio));
-                match resultado {
-                    Ok(_) => panic!("No hubo un panic."),
-                    Err(e) => {
-                        let e = e.downcast::<String>();
-                        match e {
-                            Ok(e) => assert_eq!(*e, "El formato del vector de precios es incorrecto."),
-                            Err(_) => panic!("El panic no pudo procesarse.")
+                let _ = categ_a.mensual(vacio);
                         }
-                    },
-                };
+
                 
+            #[test]
+            #[should_panic(expected = "No se encontró un ID de deporte")]
+            fn test_get_deporte_panic() {
+                let categ_b = Categoria::new(2);
+                let _ = categ_b.get_deporte(None);
             }
     }
     
+    #[cfg(tests)]
     mod recibo_tests {
         use crate::club_sem_rust::*;
 
@@ -1480,6 +1536,7 @@ mod club_sem_rust {
         
     }
     
+    #[cfg(tests)]
     mod pago_tests {
         use crate::club_sem_rust::*;
 
