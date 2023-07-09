@@ -99,7 +99,7 @@ mod club_sem_rust {
                     if self.pagos[i].pendiente == false{
                         match self.pagos[i].fecha_pago{
                             Some(fe) => {
-                                let recibo = Recibo::new(self.nombre.clone(), self.dni, self.pagos[i].monto, self.id_categoria, fe );
+                                let recibo = Recibo::new(self.nombre.clone(), self.dni, self.pagos[i].monto, self.pagos[i].categoria.clone(), fe );
                                 recibos.push(recibo);    
                             },
                             None => panic!("Este Socio registra un Pago sin fecha")
@@ -245,12 +245,12 @@ mod club_sem_rust {
         /// let nombre = String::from("Alice"); 
         /// let recibo = Recibo::new(nombre, u32::default(), u128::default(), Categoria::A, u64::default());
         /// ```
-        pub fn new(nombre: String, dni:u32, monto:u128, id_categoria: u32, fecha:Timestamp) -> Recibo {
+        pub fn new(nombre: String, dni:u32, monto:u128, categoria: Categoria, fecha:Timestamp) -> Recibo {
             Recibo { 
                 nombre,
                 dni,
                 monto,
-                categoria: Categoria::match_categoria(id_categoria),
+                categoria,
                 fecha,
             }
         }
