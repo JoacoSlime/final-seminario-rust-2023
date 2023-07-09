@@ -53,7 +53,7 @@ mod gestor_de_cobros {
         /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
         /// 
         #[ink(message)]
-        pub fn recaudación(&self) -> Vec<Recaudacion> {
+        pub fn recaudacion(&self) -> Vec<Recaudacion> {
             let socios:Vec<Socio> = self.get_socios();
             let mut vec_recaudacion:Vec<Recaudacion> = Vec::new();
 
@@ -61,7 +61,7 @@ mod gestor_de_cobros {
             
             let closure = |s: &Socio, n: u32| {
                 if s.mi_categoria(n) {
-                    s.generar_recibos();
+                    Some(s.generar_recibos())
                 } else {
                     None
                 }
