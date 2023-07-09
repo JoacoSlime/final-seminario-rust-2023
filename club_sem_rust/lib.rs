@@ -260,8 +260,11 @@ mod club_sem_rust {
         /// # Ejemplo
         /// 
         /// ```
+        /// use crate::club_sem_rust::Recibo;
+        /// use crate::club_sem_rust::Categoria;
+        /// 
         /// let nombre = String::from("Alice");
-        /// let recibo = Recibo::new(nombre, u32::default(), 5000, 1, u64::default());
+        /// let recibo = Recibo::new(nombre, u32::default(), 5000, Categoria::A, u64::default());
         /// assert_eq!(recibo.get_monto(), 5000)
         /// ```
         pub fn get_monto(&self) -> u128 {
