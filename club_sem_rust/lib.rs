@@ -837,7 +837,6 @@ mod club_sem_rust {
         /// Itera sobre el vector de AccountId de la estructura y devuelve true si encuentra 
         /// una cuenta que concuerde con el id pasado por parámetro
         fn esta_habilitada(&self, id: AccountId) -> bool {
-
             /* 
                 
                 if self.esta_bloqueado == false { return true }
@@ -847,8 +846,9 @@ mod club_sem_rust {
                 Si está bloqueado, se usa el protocolo de callers con permisos
 
              */
-
-            self.cuentas_habilitadas.iter().any(|account_id| *account_id == id)
+            !self.esta_bloqueado
+            || self.cuentas_habilitadas.iter().any(|account_id| *account_id == id)
+            || self.owner == Some(id)
         }
     }
 
