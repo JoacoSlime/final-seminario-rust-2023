@@ -7,7 +7,7 @@
 //! 
 
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-pub use self::club_sem_rust::{ClubSemRustRef, Recibo, Socio};
+pub use self::club_sem_rust::*;
 #[ink::contract]
 mod club_sem_rust {
     use ink::prelude::string::String;
@@ -61,9 +61,11 @@ mod club_sem_rust {
         ///
         /// # Ejemplo
         /// ```
+        /// use crate::club_sem_rust::Socio;
+        /// 
         /// let precio_categorias = vec![5000,4000,2000];
-        /// let socio = Socio::new("Alice", 44044044, 2, 1, 0, precio_categorias);
-        /// let habilitado = socio.puede_hacer_deporte(1):
+        /// let socio = Socio::new("Alice".to_string(), 44044044, 2, Some(1), 0, precio_categorias);
+        /// let habilitado = socio.puede_hacer_deporte(1);
         /// assert!(habilitado); 
         /// ```
         pub fn puede_hacer_deporte(&self, id_deporte: u32) -> bool {
@@ -237,8 +239,11 @@ mod club_sem_rust {
         /// # Ejemplo
         /// 
         /// ```
+        /// use crate::club_sem_rust::Recibo;
+        /// use crate::club_sem_rust::Categoria;
+        /// 
         /// let nombre = String::from("Alice"); 
-        /// let recibo = Recibo::new(nombre, u32::default(), u128::default(), 1, u64::default());
+        /// let recibo = Recibo::new(nombre, u32::default(), u128::default(), Categoria::A, u64::default());
         /// ```
         pub fn new(nombre: String, dni:u32, monto:u128, id_categoria: u32, fecha:Timestamp) -> Recibo {
             Recibo { 
@@ -270,9 +275,12 @@ mod club_sem_rust {
         /// 
         /// # Ejemplo
         /// ```
+        /// use crate::club_sem_rust::Recibo;
+        /// use crate::club_sem_rust::Categoria;
+        /// 
         /// let fecha_min = 1000;
         /// let fecha_max = 2000;
-        /// let socio = Recibo::new("Alice", 44044044, 5000, 1, 1500);
+        /// let socio = Recibo::new("Alice".to_string(), 44044044, 5000, Categoria::A, 1500);
         /// let entre = socio.fecha_entre(fecha_min, fecha_max);
         /// ```
         pub fn fecha_entre(&self, fecha_min:Timestamp, fecha_max:Timestamp) -> bool {
@@ -306,7 +314,10 @@ mod club_sem_rust {
         /// 
         /// # Ejemplo
         /// ```
-        /// let pago = Pago::new(u64::default(), 1);
+        /// use crate::club_sem_rust::Pago;
+        /// 
+        /// let precios = Vec::from([5000,4000,2000]);
+        /// let pago = Pago::new(u64::default(), 1, None, precios);
         /// ```
         pub fn new(vencimiento:Timestamp, id_categoria: u32,
              descuento: Option<u128>, precio_categorias: Vec<u128>) -> Pago {
@@ -343,7 +354,10 @@ mod club_sem_rust {
         /// 
         /// # Ejemplo
         /// ```
-        /// let pago = Pago::new(u64::default(), 1);
+        /// use crate::club_sem_rust::Pago;
+        /// 
+        /// let precios = Vec::from([5000,4000,2000]);
+        /// let pago = Pago::new(u64::default(), 1, None, precios);
         /// assert!(pago.es_moroso(u64::default() + 1));
         /// ```
         pub fn es_moroso(&self, now: Timestamp) -> bool {
@@ -360,9 +374,11 @@ mod club_sem_rust {
         /// 
         /// # Ejemplo
         /// ```
-        /// let pago = Pago::new(u64::default()+1, 1);
-        /// let precio_categorias = Vec::from([5000,3000,2000]);
-        /// pago.realizar_pago(None, 5000, u64::default(), precio_categorias);
+        /// use crate::club_sem_rust::Pago;
+        /// 
+        /// let precios = Vec::from([5000,4000,2000]);
+        /// let mut pago = Pago::new(u64::default(), 1, None, precios);
+        /// pago.realizar_pago(None, 5000, u64::default());
         /// ```
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp) {
             if !self.pendiente {
@@ -490,8 +506,10 @@ mod club_sem_rust {
         ///
         /// # Ejemplo
         /// ```
+        /// use crate::club_sem_rust::Deporte;
+        /// 
         /// let deportes = Deporte::get_deportes();
-        /// assert_eq!(deportes.len()-1, Deporte::Paddle);
+        /// assert_eq!(deportes[deportes.len()-1], Deporte::Paddle);
         /// ```
         pub fn get_deportes() -> Vec<Deporte> {
             Vec::from([
@@ -514,6 +532,8 @@ mod club_sem_rust {
         /// 
         /// # Ejemplo
         /// ```
+        /// use crate::club_sem_rust::Deporte;
+        /// 
         /// let deporte = Deporte::match_deporte(1);
         /// assert_eq!(deporte, Deporte::Futbol);
         /// ```
@@ -564,6 +584,10 @@ mod club_sem_rust {
     }
 
     impl ClubSemRust {
+        /// Crea un nuevo club en base a los parámetros dados
+        /// 
+        /// # Panics:
+        /// Puede dar panic si el descuento es mayor a 100
         #[ink(constructor)]
         pub fn new(descuento: u128, duracion_deadline: Timestamp, precio_categoria_a: u128, precio_categoria_b: u128, precio_categoria_c: u128, pagos_consecutivos_bono: u32) -> Self {
             let mut club = Self {
@@ -579,11 +603,16 @@ mod club_sem_rust {
             club
         }
 	    
+        /// Transfiere la cuenta de un owner a otro pasado por parámetro
+        /// 
+        /// # Panics
+        /// Puede llegar a dar panic si el caller no es el owner
          #[ink(message)]
         pub fn transfer_account(&mut self, owner:Option<AccountId>){
             self.owner = owner;
         }
 	    
+        /// Crea un club con valores por defecto arbitrarios.
         #[ink(constructor)]
         pub fn default() -> Self {
             // 864_000_000 es 10 días 
@@ -632,6 +661,9 @@ mod club_sem_rust {
             }
         }
         
+        /// Devuelve el tiempo que tiene un usuario desde el registro de un pago para verificarlo.
+        /// 
+        /// La deadline está en formato Unix Timestamp
         #[ink(message)]
         pub fn get_duracion_deadline(&self) -> Timestamp {
             self.duracion_deadline
@@ -731,6 +763,9 @@ mod club_sem_rust {
         }
         
         /// Devuelve un Vector de todos los recibos generados.
+        /// 
+        /// # Panics
+        /// Puede dar panic si el socio no existe.
         #[ink(message)]
         pub fn get_recibos(&self, dni: u32) -> Option<Vec<Recibo>> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
@@ -771,6 +806,7 @@ mod club_sem_rust {
              */
         
 
+        /// Bloquea la estructura para que solo pueda ser modificada por las cuentas habilitadas o el owner
         #[ink(message)]
         pub fn flip_bloqueo(&mut self) {
             // if caller is owner
