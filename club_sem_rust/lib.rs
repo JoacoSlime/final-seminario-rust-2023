@@ -603,6 +603,7 @@ mod club_sem_rust {
                 esta_bloqueado: false,
                 owner:None,
             };
+            club.transfer_account(None);
             club
         }
 	    
@@ -611,8 +612,17 @@ mod club_sem_rust {
         /// # Panics
         /// Puede llegar a dar panic si el caller no es el owner
          #[ink(message)]
-        pub fn transfer_account(&mut self, owner:Option<AccountId>){
-            self.owner = owner;
+        pub fn transfer_account(&mut self, new_owner:Option<AccountId>){
+            let caller = self.env().caller();
+            if let Some(owner) = self.owner {
+                if owner == caller {
+                    self.owner = new_owner;
+                } else {
+                    panic!("NO ES EL OWNER")
+                }
+            } else {
+                self.owner = Some(caller);
+            }
         }
 	    
         /// Crea un club con valores por defecto arbitrarios.
