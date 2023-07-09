@@ -783,11 +783,11 @@ mod club_sem_rust {
         /// # Panics
         /// Puede dar panic si el socio no existe.
         #[ink(message)]
-        pub fn get_recibos(&self, dni: u32) -> Option<Vec<Recibo>> {
+        pub fn get_recibos(&self, dni: u32) -> Vec<Recibo> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
-                Some(socio.generar_recibos())
+                socio.generar_recibos()
             } else {
-                None
+                panic!("Socio no encontrado.");
             }
         }
         
