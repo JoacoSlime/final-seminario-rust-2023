@@ -697,10 +697,10 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn set_descuento(&mut self, descuento: u128) {
             if self.esta_habilitada(self.env().caller()){
-                if descuento > 0 && descuento < 101  {
-            		self.descuento = descuento;
-                }else{
+                if descuento > 101  {
                     panic!("EL PORCENTAJE DE DESCUENTO INGRESADO ESTÁ MAL!"); // panics!
+                } else {
+            		self.descuento = descuento;
                 }
             }else{
                 panic!("No está habilitado para realizar esta operación.")
