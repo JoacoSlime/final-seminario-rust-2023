@@ -13,6 +13,7 @@ club_sem_rust = { path = "club_sem_rust", default-features = false, features = [
 
 [dev-dependencies]
 ink_e2e = "4.2.0"
+faux = "^0.1"
 
 [lib]
 path = "lib.rs"
