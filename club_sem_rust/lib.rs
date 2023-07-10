@@ -97,7 +97,7 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago o
+        /// Devuelve panic si el pago no presenta una fecha,
         /// si el socio no tiene ningún Pago registrado.
         pub fn generar_recibos(&self) -> Vec<Recibo> {
             let mut recibos = Vec::new();
