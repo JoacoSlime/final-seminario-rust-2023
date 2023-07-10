@@ -20,8 +20,6 @@ mod gestor_de_cobros {
         club_sem_rust: ClubSemRustRef, // Solo tiene un referencia en caso de no ser un test.
     }
 
-
-
     impl GestorDeCobros {
         #[ink(constructor)]
         #[cfg(not(test))]
@@ -33,7 +31,6 @@ mod gestor_de_cobros {
         fn get_socios(&self) -> Vec<Socio> {
             self.club_sem_rust.get_socios()
         }
-
         
         #[cfg(test)]
         pub fn new() -> Self {
@@ -108,7 +105,7 @@ mod gestor_de_cobros {
         /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
         /// 
         #[ink(message)]
-        pub fn recaudacion(&self) -> Vec<Recaudacion> {
+        pub fn get_recaudacion(&self) -> Vec<Recaudacion> {
             let socios:Vec<Socio> = self.get_socios();
             let mut vec_recaudacion:Vec<Recaudacion> = Vec::new();
 
@@ -158,7 +155,6 @@ mod gestor_de_cobros {
         }
     }
 
-
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
         feature = "std",
@@ -203,17 +199,22 @@ mod gestor_de_cobros {
 
         #[ink::test]
         #[should_panic(expected = "Categoría inválida.")]
-        fn recaudacion_test_panic(){
+        fn new_recaudacion_test_panic(){
             Recaudacion::new(2000, 1_000_000, 0);
         }
 
         #[ink::test]
-        fn recaudacion_test_fecha(){
+        fn new_recaudacion_test_fecha(){
             let recaudacion: Recaudacion= Recaudacion::new(2000, 986007600, 1);
             let esperado = "31/03/2001".to_string();
             let resultado = recaudacion.fecha;
 
             assert_eq!(esperado, resultado, "se esperaba {:?} y se recibió {:?}", esperado, resultado)
+        }
+
+        #[ink::test]
+        fn get_recaudacion_test(){
+            todo!();
         }
 
         #[ink::test]

@@ -759,11 +759,13 @@ mod club_sem_rust {
                 let deadline: Timestamp = hoy+self.get_duracion_deadline();
                 if self.socios.len() > 0{
                     if let Some(i) = self.socios.iter().position(|s| s.dni == dni){
-                        if self.socios[i].pagos[self.socios[i].pagos.len() - 1].pendiente == true {
-                            if self.socios[i].cumple_bonificacion(self.pagos_consecutivos_bono){
-                                self.socios[i].realizar_pago(Some(self.descuento), monto, hoy, precios, deadline);
-                            }else{
-                                self.socios[i].realizar_pago(None, monto, hoy, precios, deadline);
+                        if self.socios[i].pagos.last().is_some() {
+                            if self.socios[i].pagos.last().unwrap().pendiente == true {
+                                if self.socios[i].cumple_bonificacion(self.pagos_consecutivos_bono){
+                                    self.socios[i].realizar_pago(Some(self.descuento), monto, hoy, precios, deadline);
+                                }else{
+                                    self.socios[i].realizar_pago(None, monto, hoy, precios, deadline);
+                                }
                             }
                         }else{
                             panic!("No existe un Pago pendiente!");
