@@ -1351,15 +1351,15 @@ mod club_sem_rust {
         #[should_panic(expected = "Este socio no tiene ningún Pago registrado")]
         fn get_recibos_panic_test_pago_vacio() {
             let now = 5000;
-            let esperado = Vec::new();
-                let club = ClubSemRust{
-                    socios: Vec::from([Socio{
-                            id_deporte: None,
-                            id_categoria: 3,
-                            dni: 45045045,
-                            nombre: "Roberto".to_string(),
-                            pagos:  Vec::new(),
-                        }]),
+            let esperado: Vec<Recibo> = Vec::new();
+            let club = ClubSemRust{
+                socios: Vec::from([Socio{
+                        id_deporte: None,
+                        id_categoria: 3,
+                        dni: 45045045,
+                        nombre: "Roberto".to_string(),
+                        pagos:  Vec::new(),
+                    }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
