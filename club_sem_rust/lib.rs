@@ -319,7 +319,7 @@ mod club_sem_rust {
         /// 
         /// Puede llegar a dar panic:
         /// - Si la id_categoria es inválida.
-        /// - Si el numero de la multiplicación es demasiado grande al aplicar el descuento.    
+        /// - Si el precio de la categoria o el descuento son demasiado grande al aplicar el descuento.
         /// 
         /// # Ejemplo
         /// ```
@@ -335,9 +335,9 @@ mod club_sem_rust {
                 let mut nuevos_precios = Vec::with_capacity(3);
                 nuevos_precios.resize(precio_categorias.len(), 0);
                 for i in 0..nuevos_precios.len() {
-                    let multiplicado = (precio_categorias[i]).checked_mul(descuento);
+                    let multiplicado = (precio_categorias[i]).checked_mul(100_u128.checked_sub(descuento).expect("La resta causó un overflow"));
                     if let Some(multiplicado) = multiplicado {
-                        nuevos_precios[i] = multiplicado.checked_div(100).expect("La división causó un overflow.");
+                        nuevos_precios[i] = multiplicado.checked_div(100).unwrap(); // Nunca puede dar None.
                     } else {
                         panic!("La multiplicación causó un overflow.")
                     }
@@ -1649,7 +1649,6 @@ mod club_sem_rust {
             let nombre:String = "Carlos".to_string();
             let dni:u32 = 44444444;
             let monto:u128 = 1234567;
-            let id_categoria:u32 = 1;
             let fecha:Timestamp = 1_000_000_000;
             
             let esperado:Recibo= Recibo { nombre: "Carlos".to_string(),
@@ -1666,7 +1665,6 @@ mod club_sem_rust {
             let nombre:String = "Carlos".to_string();
             let dni:u32 = 44444444;
             let monto:u128 = 5000;
-            let id_categoria:u32 = 1;
             let fecha:Timestamp = 1_000_000_000;
 
             let esperado:u128 = 5000;
@@ -1680,12 +1678,11 @@ mod club_sem_rust {
             let nombre:String = "Carlos".to_string();
             let dni:u32 = 44444444;
             let monto:u128 = 5000;
-            let id_categoria:u32 = 1;
             let fecha:Timestamp = 1_000_000;
             let recibo:Recibo = Recibo::new(nombre, dni, monto, Categoria::A, fecha);
 
-            let mut fecha_min: Timestamp = 500_000;
-            let mut fecha_max: Timestamp = 1_500_000;
+            let fecha_min: Timestamp = 500_000;
+            let fecha_max: Timestamp = 1_500_000;
 
             assert_eq!(recibo.fecha_entre(fecha_min.clone(), fecha_max.clone()), true);
             assert_eq!(recibo.fecha_entre(fecha_min+1_000_000, fecha_max+1_000_000), false);
@@ -1700,20 +1697,36 @@ mod club_sem_rust {
         #[test]
         #[ink::test]
         #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
-        fn test_new_panic(){
+        fn test_new_id_panic(){
             let vencimiento: Timestamp = 1_000_000_000;
             let id_categoria_invalida:u32 = 100;
             Pago::new(vencimiento, id_categoria_invalida, None, Vec::from([5000,4000,2000]));
         }
 
         #[test]
-        #[ink::test]
+        #[should_panic(expected = "La resta causó un overflow")]
+        fn test_new_overflow_sub_panic(){
+            let vencimiento: Timestamp = 1_000_000_000;
+            let id_categoria_invalida:u32 = 3;
+            Pago::new(vencimiento, id_categoria_invalida, Some(u128::MAX), Vec::from([5000,4000,2000]));
+        }
+
+        #[test]
+        #[should_panic(expected = "La multiplicación causó un overflow.")]
+        fn test_new_overflow_mul_panic(){
+            let vencimiento: Timestamp = 1_000_000_000;
+            let id_categoria_invalida:u32 = 3;
+            Pago::new(vencimiento, id_categoria_invalida, Some(10), Vec::from([u128::MAX,u128::MAX,u128::MAX]));
+        }
+
+        #[test]
         fn test_new_pago(){
             let pago_con_descuento:Pago = Pago::new(1_000_000_000, 3, Some(10), Vec::from([5000,4000,2000]));
             let pago_sin_descuento:Pago = Pago::new(1_000_000_000, 3, None, Vec::from([5000,4000,2000]));
+            let pago_gratis:Pago = Pago::new(1_000_000_000, 3, Some(100), Vec::from([5000,4000,2000]));
 
             let esperado_con_descuento:Pago = Pago { vencimiento: 1_000_000_000,
-                categoria: 3,
+                categoria: Categoria::C,
                 monto: 1800,
                 pendiente: true,
                 a_tiempo: false,
@@ -1721,17 +1734,25 @@ mod club_sem_rust {
                 fecha_pago: None,
             };
             let esperado_sin_descuento:Pago = Pago { vencimiento: 1_000_000_000,
-                categoria: 3,
+                categoria: Categoria::C,
                 monto: 2000,
                 pendiente: true,
                 a_tiempo: false,
                 aplico_descuento: false,
                 fecha_pago: None,
             };
+            let esperado_gratis:Pago = Pago { vencimiento: 1_000_000_000,
+                categoria: Categoria::C,
+                monto: 0,
+                pendiente: true,
+                a_tiempo: false,
+                aplico_descuento: true,
+                fecha_pago: None,
+            };
 
             assert_eq!(pago_con_descuento, esperado_con_descuento);
             assert_eq!(pago_sin_descuento, esperado_sin_descuento);
-
+            assert_eq!(pago_gratis, esperado_gratis);
         }
         
         #[test]
@@ -1765,7 +1786,7 @@ mod club_sem_rust {
             let mut pago_sin_descuento:Pago = Pago::new(1_000_000_000, 3, None, Vec::from([5000,4000,2000]));
 
             let esperado_con_descuento:Pago = Pago { vencimiento: 1_000_000_000,
-                categoria: 3,
+                categoria: Categoria::C,
                 monto: 1800,
                 pendiente: false,
                 a_tiempo: true,
@@ -1773,7 +1794,7 @@ mod club_sem_rust {
                 fecha_pago: Some(1_000_000),
             };
             let esperado_sin_descuento:Pago = Pago { vencimiento: 1_000_000_000,
-                categoria: 3,
+                categoria: Categoria::C,
                 monto: 2000,
                 pendiente: false,
                 a_tiempo: true,
