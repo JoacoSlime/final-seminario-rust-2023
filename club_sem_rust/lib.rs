@@ -1689,10 +1689,6 @@ mod club_sem_rust {
             assert_eq!(recibo.get_monto(), esperado);
         }
 
-        /*  pub fn fecha_entre(&self, fecha_min:Timestamp, fecha_max:Timestamp) -> bool {
-                return self.fecha >= fecha_min && self.fecha <= fecha_max;
-            }
-        */
         #[test]
         fn test_fecha_entre(){
             let nombre:String = "Carlos".to_string();
@@ -1707,11 +1703,7 @@ mod club_sem_rust {
 
             assert_eq!(recibo.fecha_entre(fecha_min.clone(), fecha_max.clone()), true);
             assert_eq!(recibo.fecha_entre(fecha_min+1_000_000, fecha_max+1_000_000), false);
-
         }
-
-
-
 
     }
     
