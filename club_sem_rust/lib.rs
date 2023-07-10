@@ -37,7 +37,7 @@ mod club_sem_rust {
             if id_categoria == 2 && id_deporte == None{
                 panic!("Categoria B debe elegir un deporte");
             }else{
-                if id_categoria == 1 || id_categoria == 3 && id_deporte != None{
+                if (id_categoria == 1 || id_categoria == 3) && id_deporte != None{ // Agregar a los tests - J
                     panic!("Categoria A y Categoria C no deben elegir un deporte  -- Este campo debe permanecer vacio");
                 }else{
                     if id_categoria == 2 && id_deporte == Some(2){
