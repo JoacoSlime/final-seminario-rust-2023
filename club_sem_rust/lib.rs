@@ -393,7 +393,7 @@ mod club_sem_rust {
         pub fn realizar_pago(&mut self, descuento: Option<u128>, monto: u128, fecha: Timestamp) {
             if !self.pendiente {
                 panic!("El pago no está pendiente.");
-            } else if !self.monto == monto {
+            } else if self.monto != monto {
                 panic!("Monto incorrecto.");
             } else {
                 self.fecha_pago = Some(fecha);
@@ -1699,7 +1699,7 @@ mod club_sem_rust {
 
         #[test]
         #[ink::test]
-        #[should_panic(expected = "id_categoria fuera de rango.")]
+        #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
         fn test_new_panic(){
             let vencimiento: Timestamp = 1_000_000_000;
             let id_categoria_invalida:u32 = 100;
