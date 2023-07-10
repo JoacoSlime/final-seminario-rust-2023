@@ -1705,6 +1705,34 @@ mod club_sem_rust {
             let id_categoria_invalida:u32 = 100;
             Pago::new(vencimiento, id_categoria_invalida, None, Vec::from([5000,4000,2000]));
         }
+
+        #[test]
+        #[ink::test]
+        fn test_new_pago(){
+            let pago_con_descuento:Pago = Pago::new(1_000_000_000, 3, Some(10), Vec::from([5000,4000,2000]));
+            let pago_sin_descuento:Pago = Pago::new(1_000_000_000, 3, None, Vec::from([5000,4000,2000]));
+
+            let esperado_con_descuento:Pago = Pago { vencimiento: 1_000_000_000,
+                categoria: 3,
+                monto: 1800,
+                pendiente: true,
+                a_tiempo: false,
+                aplico_descuento: true,
+                fecha_pago: None,
+            };
+            let esperado_sin_descuento:Pago = Pago { vencimiento: 1_000_000_000,
+                categoria: 3,
+                monto: 2000,
+                pendiente: true,
+                a_tiempo: false,
+                aplico_descuento: false,
+                fecha_pago: None,
+            };
+
+            assert_eq!(pago_con_descuento, esperado_con_descuento);
+            assert_eq!(pago_sin_descuento, esperado_sin_descuento);
+
+        }
         
         #[test]
         #[ink::test]
@@ -1730,7 +1758,36 @@ mod club_sem_rust {
             pago.realizar_pago(None, 0, current_time);
             
         }
-        
+
+        #[test]
+        fn test_realizar_pago(){
+            let mut pago_con_descuento:Pago = Pago::new(1_000_000_000, 3, Some(10), Vec::from([5000,4000,2000]));
+            let mut pago_sin_descuento:Pago = Pago::new(1_000_000_000, 3, None, Vec::from([5000,4000,2000]));
+
+            let esperado_con_descuento:Pago = Pago { vencimiento: 1_000_000_000,
+                categoria: 3,
+                monto: 1800,
+                pendiente: false,
+                a_tiempo: true,
+                aplico_descuento: true,
+                fecha_pago: Some(1_000_000),
+            };
+            let esperado_sin_descuento:Pago = Pago { vencimiento: 1_000_000_000,
+                categoria: 3,
+                monto: 2000,
+                pendiente: false,
+                a_tiempo: true,
+                aplico_descuento: false,
+                fecha_pago: Some(1_000_000),
+            };
+
+            pago_con_descuento.realizar_pago(Some(10), 1800, 1_000_000);
+            pago_sin_descuento.realizar_pago(None, 2000, 1_000_000);
+
+            assert_eq!(pago_con_descuento, esperado_con_descuento);
+            assert_eq!(pago_sin_descuento, esperado_sin_descuento);
+        }
+
         #[test]
         #[ink::test]
         fn test_es_moroso(){
