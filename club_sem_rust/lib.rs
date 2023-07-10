@@ -1124,7 +1124,7 @@ mod club_sem_rust {
                                 fecha_pago: Some(now),
                             },
                             Pago{
-                                vencimiento: 864_000_000 + now * 2,
+                                vencimiento: 864_000_000 * 2 + now * 2,
                                 categoria: Categoria::C,
                                 monto: 2000,
                                 pendiente: true,
@@ -1148,12 +1148,12 @@ mod club_sem_rust {
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
             }
 
-            #[ink::test]
-            #[should_panic(expected = "No hay ningún socio registrado!")]
-            fn registrar_pago_test_panic_socio() {
-                let mut club:ClubSemRust = ClubSemRust{
-                    socios: Vec::new(),
-                    descuento: 15,
+        #[ink::test]
+        #[should_panic(expected = "No hay ningún socio registrado!")]
+        fn registrar_pago_test_panic_socio() {
+            let mut club:ClubSemRust = ClubSemRust{
+                socios: Vec::new(),
+                descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
                 pagos_consecutivos_bono: 3,
@@ -1566,6 +1566,20 @@ mod club_sem_rust {
                 assert_ne!(Categoria::match_categoria(2), Categoria::A);
                 assert_ne!(Categoria::match_categoria(3), Categoria::A);
                 
+            }
+
+            
+            #[test]
+            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+            fn match_categoria_panic_low_test(){
+                let _ = Categoria::match_categoria(0);           
+            }
+
+            
+            #[test]
+            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+            fn match_categoria_panic_high_test(){
+                let _ = Categoria::match_categoria(4);                
             }
             
             #[test]
