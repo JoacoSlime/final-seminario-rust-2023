@@ -13,6 +13,7 @@ mod club_sem_rust {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
 
+
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
     #[cfg_attr(
         feature = "std",
@@ -27,7 +28,7 @@ mod club_sem_rust {
     }
     impl Socio{
         /// Construye un nuevo Socio con sus variables de a cuerdo a lo que le enviemos por parametro.
-        /// Empieza con un Pago pendiente
+        /// Empieza con un Pago pendiente.
         /// 
         /// # Panic
         /// 
@@ -55,9 +56,13 @@ mod club_sem_rust {
             }
         }
 
-	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte
+	    /// Verifica si un determinado usuario esta habilitado o no para realizar un determinado deporte.
         ///
-        /// Recibe el id_deporte que se quiere verificar
+        /// Recibe el id_deporte que se quiera verificar.
+        /// 
+        /// # Panic
+        /// 
+        /// Puede devolver panic si el id_categoría del Socio está fuera de rango.
         ///
         /// # Ejemplo
         /// ```
@@ -87,14 +92,18 @@ mod club_sem_rust {
     	    }
         }
 
-        /// Recorre todos los Pagos completados de un Socio y crea un listado de recibos con los datos relevantes de cada Pago
+        /// Recorre todos los Pagos completados de un Socio y crea un vector de Recibos con los datos relevantes de cada Pago
+        /// Si el Socio no tiene ningún Pago realizado, devuelve un vector vacío.
         /// 
         /// # Panic
         /// 
-        /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago
+        /// Devuelve panic si se arrastró algún error durante el procesamiento de algún Pago o
+        /// si el socio no tiene ningún Pago registrado.
         pub fn generar_recibos(&self) -> Vec<Recibo> {
             let mut recibos = Vec::new();
-            if self.pagos.len() != 0 {
+            if self.pagos.is_empty() {
+                panic!("Este socio no tiene ningún Pago registrado");
+            }else{
                 for i in 0..self.pagos.len(){
                     if self.pagos[i].pendiente == false{
                         match self.pagos[i].fecha_pago{
@@ -106,18 +115,16 @@ mod club_sem_rust {
                         }
                     }
                 }
-            }else{
-                panic!("Este Socio no tiene ningun pago registrado habido ni por haber")
             }
             return recibos
         }
 
-        /// Consulta el ultimo pago y devuelve true si está vencido y sin pagar
-        /// Si devuelve true el socio se considera moroso
+        /// Consulta el ultimo pago y devuelve true si está vencido y sin pagar.
+        /// Si devuelve true el socio se considera moroso.
         /// 
         /// # Panic
         /// 
-        /// El método puede dar panic en caso de que el socio no tenga pagos registrados.
+        /// El método puede devolver panic en caso de que el socio no tenga pagos registrados.
         pub fn es_moroso(&self, current_time:Timestamp) -> bool {
             if let Some(ultimo_pago) = self.pagos.last(){
                 return ultimo_pago.es_moroso(current_time);
@@ -126,10 +133,10 @@ mod club_sem_rust {
             }
         }
 
-        /// Socio realiza un Pago, luego se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
+        /// Socio realiza un Pago, inmediatamente después se crea un nuevo Pago pendiente con una nueva fecha de vencimiento
         /// 
-        /// Socio siempre deberá tener un único Pago pendiente en el último índice de su lista de Pagos
-        /// La creación de un nuevo Pago pendiente se da automáticamente una vez pagado el anterior
+        /// Todo Socio deberá tener al menos un Pago pendiente en el último índice de su lista de Pagos.
+        /// La creación de un nuevo Pago pendiente se da automáticamente una vez pagado el anterior.
         /// 
         /// # Panics
         /// 
@@ -139,14 +146,14 @@ mod club_sem_rust {
                 self.pagos[i].realizar_pago(descuento, monto, fecha);
                 self.pagos.push(Pago::new(fecha+deadline, self.id_categoria, descuento, precio_categorias));
             }else{
-                panic!("Este socio no tiene pagos habidos ni por haber");
+                panic!("Este socio no tiene ningún Pago registrado");
             }
         }
 
-	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificacion
+	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificación.
         ///
-        /// Recibe por parametro la cantidad de pagos consecutivos que deben figurar como pagados "a tiempo" para aplicar la bonificacion
-        /// cumple_bonificacion funciona como un shor-circuit. Al encontrar un pago que no cumple devuelve false y termina su ejecución
+        /// Recibe por parametro la cantidad de pagos consecutivos que deben figurar como pagados "a tiempo" para aplicar la bonificacion.
+        /// cumple_bonificacion funciona como un shor-circuit. Al encontrar un pago que no cumple devuelve false y termina su ejecución.
         pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
             if self.pagos.len() < pagos_consecutivos as usize {
                 return false
@@ -164,7 +171,7 @@ mod club_sem_rust {
 
 	    /// Permite al usuario cambiar su propia categoria
         ///
-        /// Si el id_categoria y/o id_deporte ingresados son invalidos, no guarda ningun cambio y se genera un panic
+        /// Si el id_categoria y/o id_deporte ingresados son invalidos, no guarda ningun cambio y se devuelve un panic
         /// 
         /// Si se cambia a Categoria A o C debe setear id_deporte = None
         /// Si se cambia a Categoria B debe setear id_Deporte = Some(...)
@@ -193,13 +200,13 @@ mod club_sem_rust {
             }
         }
 
-	    /// Devuelve todos los deportes que realiza un determinado Socio
+	    /// Devuelve todos los deportes que realiza un determinado Socio.
         ///
-        /// Si es de Categoria C, devuelve None
+        /// Si es de Categoria C, devuelve None.
         ///
         /// # Panics
         /// 
-        /// Puede llegar a dar panic en caso de que el id_categoria sea mayor que 3 o menor que 1.
+        /// Devolverá panic en caso de que el id_categoria sea mayor que 3 o menor que 1.
         pub fn get_mi_deporte(&self) -> Option<Vec<Deporte>>{
             match self.id_categoria {
                 3 => return None,
@@ -273,8 +280,8 @@ mod club_sem_rust {
         
         /// Chequea si un Recibo fue realizado durante cierto período de tiempo.
         /// 
-        /// Si la fecha en la que se realizó el pago está dentro de ese intervalo, se devuelve true
-        /// Si la fecha está por fuera de ese intervalo, se devuelve false
+        /// Si la fecha en la que se realizó el Pago está dentro de ese intervalo, se devuelve true.
+        /// Si la fecha está por fuera de ese intervalo, se devuelve false.
         /// 
         /// # Ejemplo
         /// ```
@@ -289,7 +296,6 @@ mod club_sem_rust {
         pub fn fecha_entre(&self, fecha_min:Timestamp, fecha_max:Timestamp) -> bool {
             return self.fecha >= fecha_min && self.fecha <= fecha_max;
         }
-        // Metodo que necesitaba para Recaudacion en el contrato Gestor -L
     }
 
     #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
@@ -298,8 +304,8 @@ mod club_sem_rust {
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
     pub struct Pago {
-        vencimiento: Timestamp, // if(current_time >= vencimiento) then vencido
-        categoria: Categoria,   // vencimiento = now + deadline_duration
+        vencimiento: Timestamp,
+        categoria: Categoria,
         monto: u128,
         pendiente: bool,
         a_tiempo: bool,
@@ -412,13 +418,13 @@ mod club_sem_rust {
     impl Categoria {
         /// Construye una Categoría a partir del ID ingresado por parámetro.
         /// 
+        /// La Categoría A corresponde al id_categoria 1.
+        /// La Categoría B corresponde al id_categoria 2.
+        /// La Categoría C corresponde al id_categoria 3.
+        /// 
         /// # Panics
         /// 
-        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido
-        /// 
-        /// Categoría A --> ID = 1
-        /// Categoría B --> ID = 2
-        /// Categoría C --> ID = 3
+        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido.
         pub fn new(id_categoria:u32) -> Categoria {
             match id_categoria {
                 1 => Self::A,
@@ -428,15 +434,11 @@ mod club_sem_rust {
             }
         }
         
-        /// Recibe por parametro un id_categoria y devuelve el tipo Categoria que le corresponde
+        /// Recibe por parámetro un id_categoria y devuelve el tipo Categoria que le corresponde.
         /// 
         /// # Panic
         /// 
-        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido
-        ///
-        /// Categoría A --> ID = 1
-        /// Categoría B --> ID = 2
-        /// Categoría C --> ID = 3
+        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido.
         pub fn match_categoria(id_categoria: u32) -> Self {
             match id_categoria {
                 1 => Self::A,
@@ -446,19 +448,18 @@ mod club_sem_rust {
             }
         }
 
-        /// Consulta y devuelve el deporte que le corresponde categoria
+        /// Consulta y devuelve el deporte que le corresponde a una Categoria
         /// 
         /// Todas las categorías pueden acceder al Gimnasio por defecto.
         /// 
-        /// Categoría A --> Devuelve una lista con todos los deportes practicables en el Club SemRust
-        /// Categoría B --> Devuelve el deporte elegido por el Socio
-        /// Categoría C --> No practica deportes por fuera del Gimnasio
+        /// Si es Categoría A, devuelve una lista con todos los deportes practicables en el Club SemRust.
+        /// Si es Categoría B, devuelve el deporte elegido por el Socio.
+        /// Si es Categoría C, no practica deportes por fuera del Gimnasio.
         ///
-        /// Recibe por parametro un Option<u32> del id_deporte
         /// 
         /// # Panic
         /// 
-        /// Puede devolver panic si se envia por parámetro un id_deporte = None siendo la categoría actual Categoría B
+        /// Puede devolver panic si se envia por parámetro un id_deporte = None siendo la Categoría actual Categoría B
         pub fn get_deporte(&self, id_deporte: Option<u32>) -> Option<Vec<Deporte>> {
             match self {
                 Self::A => Some(Deporte::get_deportes()),
@@ -473,9 +474,14 @@ mod club_sem_rust {
             }
         }
 
-        /// Consulta y devuelve el precio de la categoría de acuerdo a la lista de precios asignada por el contrato
+        /// Consulta y devuelve el precio de la Categoría de acuerdo a la lista de precios asignada por el contrato.
         ///
         /// Recibe por parametro la lista de precios, el indice se corresponde con el precio correspondiente a la categoría
+        /// # Panic
+        /// 
+        /// Puede devolver panic si:
+        ///  - La lista de precios enviada por parámetro está vacia.
+        ///  - La lista de precios tiene una longitud mayor o menos que 3.
         pub fn mensual(&self, precio_categorias: Vec<u128>) -> u128 {
             if precio_categorias.len()==3 {
                 match self {
@@ -1308,12 +1314,22 @@ mod club_sem_rust {
                             }
                             ])
                         }, Socio{
-                            id_deporte: Some(5),
+                            id_deporte: None,
                             id_categoria: 3,
-                    dni: 45045045,
-                    nombre: "Roberto".to_string(),
-                    pagos: Vec::new(),
-                }]),
+                            dni: 45045045,
+                            nombre: "Roberto".to_string(),
+                            pagos:  Vec::from([
+                                Pago{
+                                    vencimiento: now + 1_000_000,
+                                    categoria: Categoria::C,
+                                    pendiente: true,
+                                    a_tiempo: false,
+                                    aplico_descuento: false,
+                                    fecha_pago: None,
+                                    monto: 2000,
+                                }
+                            ]),
+                        }]),
                 descuento: 15,
                 precio_categorias: vec![5000, 3000, 2000],
                 duracion_deadline: 864_000_000,
@@ -1326,6 +1342,32 @@ mod club_sem_rust {
             assert_eq!(esperado, resultado, "Error en ClubSemRust::get_recibos(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
             
             let esperado: Vec<Recibo> = Vec::new();
+            let resultado = club.get_recibos(45045045);
+            assert_eq!(esperado, resultado, "Error en ClubSemRust::get_recibos(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
+        }
+
+
+        #[test]
+        #[should_panic(expected = "Este socio no tiene ningún Pago registrado")]
+        fn get_recibos_panic_test_pago_vacio() {
+            let now = 5000;
+            let esperado = Vec::new();
+                let club = ClubSemRust{
+                    socios: Vec::from([Socio{
+                            id_deporte: None,
+                            id_categoria: 3,
+                            dni: 45045045,
+                            nombre: "Roberto".to_string(),
+                            pagos:  Vec::new(),
+                        }]),
+                descuento: 15,
+                precio_categorias: vec![5000, 3000, 2000],
+                duracion_deadline: 864_000_000,
+                pagos_consecutivos_bono: 3,
+                owner: None,
+                cuentas_habilitadas: Vec::new(),
+                esta_bloqueado: false
+            };
             let resultado = club.get_recibos(45045045);
             assert_eq!(esperado, resultado, "Error en ClubSemRust::get_recibos(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
         }
