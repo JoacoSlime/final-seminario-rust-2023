@@ -6,6 +6,10 @@ mod gestor_de_cobros {
     use club_sem_rust::Socio;
     use club_sem_rust::ClubSemRustRef;
 
+    use ink::prelude::string::String;
+    use ink::prelude::vec::Vec;
+    use ink::prelude::string::ToString;
+
     #[ink(storage)]
     pub struct GestorDeCobros {
         club_sem_rust: ClubSemRustRef,
@@ -43,7 +47,7 @@ mod gestor_de_cobros {
         }
 
         /// Genera un vector con la recaudacion de cada Categoría durante el transcurso de un mes,
-        /// esto significa, la suma de todos los montos pagados a lo largo de 30 dias
+        /// esto significa, la suma de todos los montos pagados a lo largo de 30 días
         /// de todos los Recibos clasificados por Categorías. 
         /// 
         /// Se considera el paso de 30 días como el paso de un mes.
@@ -109,11 +113,18 @@ mod gestor_de_cobros {
         feature = "std",
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
+
     pub struct Recaudacion{
         monto: u128,
         fecha: Timestamp,
         categoria: String,
     }
+    /// Construye una nueva Recaudacion.
+    /// Representa la recaudación total de una determinada Categoría a lo largo de un mes.
+    /// 
+    /// # Panics
+    /// 
+    /// Puede llegar a devolver panic si se ingresa un número de id_categoria inválido.
     impl Recaudacion {
         pub fn new(monto: u128, fecha: Timestamp, categoria: u8) -> Recaudacion{
             match categoria {
@@ -124,4 +135,16 @@ mod gestor_de_cobros {
             }
         }
     }
+
+    #[cfg(test)]
+    mod gestor_de_cobros_tests {
+        use super::Recaudacion;
+
+        #[ink::test]
+        #[should_panic(expected = "Categoría inválida.")]
+        fn recaudacion_test_panic(){
+            Recaudacion::new(2000, 1_000_000, 0);
+        }
+    }
+
 }
