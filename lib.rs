@@ -16,22 +16,69 @@ mod gestor_de_cobros {
 
     #[ink(storage)]
     pub struct GestorDeCobros {
-        club_sem_rust: ClubSemRustRef,
-        allowed_accounts: Vec<AccountId>,
+        #[cfg(not(test))]
+        club_sem_rust: ClubSemRustRef, // Solo tiene un referencia en caso de no ser un test.
     }
+
+
 
     impl GestorDeCobros {
         #[ink(constructor)]
+        #[cfg(not(test))]
         pub fn new(club_sem_rust: ClubSemRustRef) -> Self {
-            Self { allowed_accounts: Vec::new(), club_sem_rust}
+            Self {club_sem_rust}
         }
-
+        
+        #[cfg(not(test))]
         fn get_socios(&self) -> Vec<Socio> {
             self.club_sem_rust.get_socios()
         }
 
+        
+        #[cfg(test)]
+        pub fn new() -> Self {
+            Self{}
+        }
+
+        #[cfg(test)]
+        /// Método mockeado para get_socios()
+        fn get_socios(&self) -> Vec<Socio> {
+            let deadline = 864_000_000;
+            let hoy = 1_690_000_000_000;
+            let precios = Vec::from([5000, 4000, 2000]);
+            let descuento = Some(15);
+            let mut a = Socio::new("Alice".to_string(), 44044044, 1, None, hoy+deadline, precios.clone());
+            let mut b = Socio::new("Bob".to_string(), 45045045, 2, Some(6), hoy+deadline, precios.clone());
+            let mut c = Socio::new("Carol".to_string(), 46046046, 2, Some(1), hoy+deadline, precios.clone());
+            let mut d = Socio::new("Derek".to_string(), 47047047, 1, None, hoy+deadline, precios.clone());
+            let e = Socio::new("Emily".to_string(), 48048048, 1, None, hoy+deadline, precios.clone());
+            let mut f = Socio::new("Frank".to_string(), 49049049, 3, None, hoy+deadline, precios.clone());
+            let g = Socio::new("Gary".to_string(), 50050050, 3, None, hoy+deadline, precios.clone());
+            
+            a.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
+            a.realizar_pago(None, 5000, hoy + 100_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 4250, hoy + 300_000, precios.clone(), deadline);
+
+            b.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
+            b.realizar_pago(None, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
+
+            c.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
+            c.realizar_pago(None, 4000, hoy + 100_000, precios.clone(), deadline);
+
+            d.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
+            d.realizar_pago(None, 5000, hoy + 100_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
+
+            f.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
+            f.realizar_pago(None, 2000, hoy + 100_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 1700, hoy + 200_000, precios.clone(), deadline);
+
+            let r = Vec::from([a,b,c,d,e,f,g]);
+            r
+        }
+
         #[ink(message)]
-         pub fn socios_morosos(&self) -> Vec<Socio> {
+        pub fn socios_morosos(&self) -> Vec<Socio> {
             let hoy = self.env().block_timestamp();
             let socios = self.get_socios();
             let socios = socios.into_iter()
