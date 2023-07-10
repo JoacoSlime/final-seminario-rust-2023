@@ -9,6 +9,10 @@ mod gestor_de_cobros {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
     use ink::prelude::string::ToString;
+    
+    extern crate chrono;
+    use chrono::prelude::*;
+    use chrono::{DateTime, Utc};
 
     #[ink(storage)]
     pub struct GestorDeCobros {
@@ -116,7 +120,7 @@ mod gestor_de_cobros {
 
     pub struct Recaudacion{
         monto: u128,
-        fecha: Timestamp,
+        fecha: String,
         categoria: String,
     }
     /// Construye una nueva Recaudacion.
@@ -127,11 +131,18 @@ mod gestor_de_cobros {
     /// Puede llegar a devolver panic si se ingresa un número de id_categoria inválido.
     impl Recaudacion {
         pub fn new(monto: u128, fecha: Timestamp, categoria: u8) -> Recaudacion{
-            match categoria {
-                1 => Recaudacion { monto, fecha, categoria: "Categoria A".to_string() },
-                2 => Recaudacion { monto, fecha, categoria: "Categoria B".to_string() },
-                3 => Recaudacion { monto, fecha, categoria: "Categoria C".to_string() },
-                _ => panic!("Categoría inválida."),
+            let naive = NaiveDateTime::from_timestamp_opt(fecha as i64, 0);
+            if naive.is_some(){
+                let datetime: DateTime<Utc> = DateTime::from_utc(naive.unwrap(), Utc);
+                let timestamp_string = datetime.format("%d/%m/%Y").to_string();
+                match categoria {
+                    1 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria A".to_string() },
+                    2 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria B".to_string() },
+                    3 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria C".to_string() },
+                    _ => panic!("Categoría inválida."),
+                }
+            }else{
+                panic!("La Fecha recibida no es válida.")
             }
         }
     }
@@ -145,6 +156,17 @@ mod gestor_de_cobros {
         fn recaudacion_test_panic(){
             Recaudacion::new(2000, 1_000_000, 0);
         }
+
+        #[ink::test]
+        fn recaudacion_test_fecha(){
+            let recaudacion: Recaudacion= Recaudacion::new(2000, 986007600, 1);
+            let esperado = "31/03/2001".to_string();
+            let resultado = recaudacion.fecha;
+
+            assert_eq!(esperado, resultado, "se esperaba {:?} y se recibió {:?}", esperado, resultado)
+        }
+
+    }
     }
 
-}
+

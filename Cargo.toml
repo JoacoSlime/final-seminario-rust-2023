@@ -10,6 +10,7 @@ ink = { version = "4.2.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
 club_sem_rust = { path = "club_sem_rust", default-features = false, features = ["ink-as-dependency"] }
+chrono = "0.4.26"
 
 [dev-dependencies]
 ink_e2e = "4.2.0"
@@ -20,11 +21,6 @@ path = "lib.rs"
 
 [features]
 default = ["std"]
-std = [
-    "ink/std",
-    "scale/std",
-    "scale-info/std",
-    "club_sem_rust/std",
-]
+std = ["ink/std", "scale/std", "scale-info/std", "club_sem_rust/std"]
 ink-as-dependency = []
 e2e-tests = []
