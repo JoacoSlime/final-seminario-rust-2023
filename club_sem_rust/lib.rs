@@ -1353,7 +1353,6 @@ mod club_sem_rust {
         #[test]
         #[should_panic(expected = "Este socio no tiene ningún Pago registrado")]
         fn get_recibos_panic_test_pago_vacio() {
-            let now = 5000;
             let esperado: Vec<Recibo> = Vec::new();
             let club = ClubSemRust{
                 socios: Vec::from([Socio{
@@ -1546,106 +1545,105 @@ mod club_sem_rust {
         }
     }
         
-        #[cfg(test)]
-        mod categoria_tests {
-            use crate::club_sem_rust::Categoria;
-            use crate::club_sem_rust::Deporte;
+    #[cfg(test)]
+    mod categoria_tests {
+        use crate::club_sem_rust::Categoria;
+        use crate::club_sem_rust::Deporte;
+        
+        //CATEGORIA TEST
+        #[test]
+        fn match_categoria_test(){
             
-            //CATEGORIA TEST
-            #[test]
-            fn match_categoria_test(){
-                
-                assert_eq!(Categoria::match_categoria(1), Categoria::A);
-                assert_eq!(Categoria::match_categoria(2), Categoria::B);
-                assert_eq!(Categoria::match_categoria(3), Categoria::C);
-                
-                assert_ne!(Categoria::match_categoria(1), Categoria::B);
-                assert_ne!(Categoria::match_categoria(3), Categoria::B);
-                assert_ne!(Categoria::match_categoria(1), Categoria::C);
-                assert_ne!(Categoria::match_categoria(2), Categoria::C);
-                assert_ne!(Categoria::match_categoria(2), Categoria::A);
-                assert_ne!(Categoria::match_categoria(3), Categoria::A);
-                
-            }
-
+            assert_eq!(Categoria::match_categoria(1), Categoria::A);
+            assert_eq!(Categoria::match_categoria(2), Categoria::B);
+            assert_eq!(Categoria::match_categoria(3), Categoria::C);
             
-            #[test]
-            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
-            fn match_categoria_panic_low_test(){
-                let _ = Categoria::match_categoria(0);           
-            }
-
+            assert_ne!(Categoria::match_categoria(1), Categoria::B);
+            assert_ne!(Categoria::match_categoria(3), Categoria::B);
+            assert_ne!(Categoria::match_categoria(1), Categoria::C);
+            assert_ne!(Categoria::match_categoria(2), Categoria::C);
+            assert_ne!(Categoria::match_categoria(2), Categoria::A);
+            assert_ne!(Categoria::match_categoria(3), Categoria::A);
             
-            #[test]
-            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
-            fn match_categoria_panic_high_test(){
-                let _ = Categoria::match_categoria(4);                
+        }
+
+        
+        #[test]
+        #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+        fn match_categoria_panic_low_test(){
+            let _ = Categoria::match_categoria(0);           
+        }
+
+        
+        #[test]
+        #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+        fn match_categoria_panic_high_test(){
+            let _ = Categoria::match_categoria(4);                
+        }
+        
+        #[test]
+        fn get_deporte_test(){
+            let categ_a = Categoria::new(1);
+            let categ_b = Categoria::new(2);
+            let categ_c = Categoria::new(3);
+            let deportes = Deporte::get_deportes();
+
+            assert_eq!(categ_a.get_deporte(None),Some(deportes.clone()));
+            for i in 1..9{
+                assert_eq!(categ_b.get_deporte(Some(i)),Some(Vec::from([deportes[(i-1) as usize].clone()])));
             }
             
-            #[test]
-            fn get_deporte_test(){
-                let categ_a = Categoria::new(1);
-                let categ_b = Categoria::new(2);
-                let categ_c = Categoria::new(3);
-                let deportes = Deporte::get_deportes();
+            assert_eq!(categ_c.get_deporte(None),None);
+            assert_ne!(categ_c.get_deporte(Some(3)), Some(Vec::from([deportes[1].clone()]))); 
+        }
 
-                assert_eq!(categ_a.get_deporte(None),Some(deportes.clone()));
-                for i in 1..9{
-                    assert_eq!(categ_b.get_deporte(Some(i)),Some(Vec::from([deportes[(i-1) as usize].clone()])));
-                }
-                
-                assert_eq!(categ_c.get_deporte(None),None);
-                assert_ne!(categ_c.get_deporte(Some(3)), Some(Vec::from([deportes[1].clone()]))); 
-            }
-
-            #[test]
-            fn mensual_test(){
-                let categ_a = Categoria::new(1);
-                let categ_b = Categoria::new(2);
-                let categ_c:Categoria = Categoria::new(3);
-                let mut valores = Vec::new();
-                valores.push(5000);
-                valores.push(3000);
-                valores.push(2000);
-                
-                assert_eq!(categ_a.mensual(valores.clone()),5000);
-                assert_eq!(categ_b.mensual(valores.clone()),3000);
-                assert_eq!(categ_c.mensual(valores.clone()),2000);
-                
-                assert_ne!(categ_a.mensual(valores.clone()),2000);
-                assert_ne!(categ_b.mensual(valores.clone()),5000);
-                assert_ne!(categ_c.mensual(valores),3000);
-            }
-
+        #[test]
+        fn mensual_test(){
+            let categ_a = Categoria::new(1);
+            let categ_b = Categoria::new(2);
+            let categ_c:Categoria = Categoria::new(3);
+            let mut valores = Vec::new();
+            valores.push(5000);
+            valores.push(3000);
+            valores.push(2000);
             
-            #[test]
-            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
-            fn test_new_panic() {
-                let _ = Categoria::new(4);
-            }
-
-            #[test]
-            #[should_panic(expected = "El formato del vector de precios es incorrecto.")]
-            fn test_mensual_panic() {
-                let categ_a = Categoria::new(1);
-                let vacio = Vec::new();
-                let _ = categ_a.mensual(vacio);
-            }
-
+            assert_eq!(categ_a.mensual(valores.clone()),5000);
+            assert_eq!(categ_b.mensual(valores.clone()),3000);
+            assert_eq!(categ_c.mensual(valores.clone()),2000);
             
-            #[test]
-            #[should_panic(expected = "No se encontró un ID de deporte")]
-            fn test_get_deporte_panic() {
-                let categ_b = Categoria::new(2);
-                let _ = categ_b.get_deporte(None);
-            }
+            assert_ne!(categ_a.mensual(valores.clone()),2000);
+            assert_ne!(categ_b.mensual(valores.clone()),5000);
+            assert_ne!(categ_c.mensual(valores),3000);
+        }
+
+        
+        #[test]
+        #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+        fn test_new_panic() {
+            let _ = Categoria::new(4);
+        }
+
+        #[test]
+        #[should_panic(expected = "El formato del vector de precios es incorrecto.")]
+        fn test_mensual_panic() {
+            let categ_a = Categoria::new(1);
+            let vacio = Vec::new();
+            let _ = categ_a.mensual(vacio);
+        }
+
+        
+        #[test]
+        #[should_panic(expected = "No se encontró un ID de deporte")]
+        fn test_get_deporte_panic() {
+            let categ_b = Categoria::new(2);
+            let _ = categ_b.get_deporte(None);
+        }
     }
     
-    #[cfg(tests)]
+    #[cfg(test)]
     mod recibo_tests {
         use crate::club_sem_rust::*;
 
-        #[test]
         #[ink::test]
         fn test_new(){
             let nombre:String = "Carlos".to_string();
@@ -1660,19 +1658,7 @@ mod club_sem_rust {
             categoria: Categoria::match_categoria(1),
             fecha: 1_000_000_000 };
             
-            assert_eq!(Recibo::new(nombre, dni, monto, id_categoria, fecha), esperado);
-        }
-        
-        #[test]
-        #[should_panic(expected = "id_categoria fuera de rango.")]
-        fn test_new_panic() {
-            let nombre:String = "Carlos".to_string();
-            let dni:u32 = 44444444;
-            let monto:u128 = 1234567;
-            let id_categoria_invalida:u32 = 100;
-            let fecha:Timestamp = 1_000_000_000;
-            
-            Recibo::new(nombre, dni, monto, id_categoria_invalida, fecha);
+            assert_eq!(Recibo::new(nombre, dni, monto, Categoria::A, fecha), esperado);
         }
 
         #[test]
@@ -1684,7 +1670,7 @@ mod club_sem_rust {
             let fecha:Timestamp = 1_000_000_000;
 
             let esperado:u128 = 5000;
-            let recibo:Recibo = Recibo::new(nombre, dni, monto, id_categoria, fecha);
+            let recibo:Recibo = Recibo::new(nombre, dni, monto, Categoria::A, fecha);
             
             assert_eq!(recibo.get_monto(), esperado);
         }
@@ -1696,7 +1682,7 @@ mod club_sem_rust {
             let monto:u128 = 5000;
             let id_categoria:u32 = 1;
             let fecha:Timestamp = 1_000_000;
-            let recibo:Recibo = Recibo::new(nombre, dni, monto, id_categoria, fecha);
+            let recibo:Recibo = Recibo::new(nombre, dni, monto, Categoria::A, fecha);
 
             let mut fecha_min: Timestamp = 500_000;
             let mut fecha_max: Timestamp = 1_500_000;
@@ -1707,7 +1693,7 @@ mod club_sem_rust {
 
     }
     
-    #[cfg(tests)]
+    #[cfg(test)]
     mod pago_tests {
         use crate::club_sem_rust::*;
 
