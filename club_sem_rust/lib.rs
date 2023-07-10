@@ -1637,13 +1637,13 @@ mod club_sem_rust {
             let id_categoria:u32 = 1;
             let fecha:Timestamp = 1_000_000_000;
             
-            let r:Recibo= Recibo { nombre: "Carlos".to_string(),
+            let esperado:Recibo= Recibo { nombre: "Carlos".to_string(),
             dni: 44444444,
             monto: 1234567,
             categoria: Categoria::match_categoria(1),
             fecha: 1_000_000_000 };
             
-            assert_eq!(Recibo::new(nombre, dni, monto, id_categoria, fecha),r);
+            assert_eq!(Recibo::new(nombre, dni, monto, id_categoria, fecha), esperado);
         }
         
         #[test]
