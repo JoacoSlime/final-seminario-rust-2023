@@ -1664,7 +1664,6 @@ mod club_sem_rust {
         }
         
         #[test]
-        #[ink::test]
         #[should_panic(expected = "id_categoria fuera de rango.")]
         fn test_new_panic() {
             let nombre:String = "Carlos".to_string();
@@ -1675,7 +1674,45 @@ mod club_sem_rust {
             
             Recibo::new(nombre, dni, monto, id_categoria_invalida, fecha);
         }
-        
+
+        #[test]
+        fn test_get_monto(){
+            let nombre:String = "Carlos".to_string();
+            let dni:u32 = 44444444;
+            let monto:u128 = 5000;
+            let id_categoria:u32 = 1;
+            let fecha:Timestamp = 1_000_000_000;
+
+            let esperado:u128 = 5000;
+            let recibo:Recibo = Recibo::new(nombre, dni, monto, id_categoria, fecha);
+            
+            assert_eq!(recibo.get_monto(), esperado);
+        }
+
+        /*  pub fn fecha_entre(&self, fecha_min:Timestamp, fecha_max:Timestamp) -> bool {
+                return self.fecha >= fecha_min && self.fecha <= fecha_max;
+            }
+        */
+        #[test]
+        fn test_fecha_entre(){
+            let nombre:String = "Carlos".to_string();
+            let dni:u32 = 44444444;
+            let monto:u128 = 5000;
+            let id_categoria:u32 = 1;
+            let fecha:Timestamp = 1_000_000;
+            let recibo:Recibo = Recibo::new(nombre, dni, monto, id_categoria, fecha);
+
+            let mut fecha_min: Timestamp = 500_000;
+            let mut fecha_max: Timestamp = 1_500_000;
+
+            assert_eq!(recibo.fecha_entre(fecha_min.clone(), fecha_max.clone()), true);
+            assert_eq!(recibo.fecha_entre(fecha_min+1_000_000, fecha_max+1_000_000), false);
+
+        }
+
+
+
+
     }
     
     #[cfg(tests)]
