@@ -371,7 +371,7 @@ mod club_sem_rust {
         /// assert!(pago.es_moroso(u64::default() + 1));
         /// ```
         pub fn es_moroso(&self, now: Timestamp) -> bool {
-            self.pendiente && self.vencimiento < now
+            self.pendiente && (self.vencimiento < now)
         }
         
         /// Cambia el estado de un pago a pagado si es válido.
