@@ -333,6 +333,7 @@ mod club_sem_rust {
             let categoria = Categoria::new(id_categoria);
             let precio_categorias = if let Some(descuento) = descuento {
                 let mut nuevos_precios = Vec::with_capacity(3);
+                nuevos_precios.resize(precio_categorias.len(), 0);
                 for i in 0..nuevos_precios.len() {
                     let multiplicado = (precio_categorias[i]).checked_mul(descuento);
                     if let Some(multiplicado) = multiplicado {
