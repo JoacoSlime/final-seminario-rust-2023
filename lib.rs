@@ -222,7 +222,8 @@ mod gestor_de_cobros {
         #[ink::test]
         fn get_recaudacion_test(){
             let deadline = 864_000_000;
-            let hoy = 1_690_000_000_000;
+            let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
+            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
             let precios = Vec::from([5000, 4000, 2000]);
             let descuento = Some(15);
             let mut a = Socio::new("Alice".to_string(), 44044044, 1, None, hoy+deadline, precios.clone());
@@ -234,8 +235,8 @@ mod gestor_de_cobros {
             let mut g = Socio::new("Gary".to_string(), 50050050, 3, None, hoy+deadline, precios.clone());
             
             a.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
-            a.realizar_pago(None, 5000, hoy + 100_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 4250, hoy + 300_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 5000, hoy + 100_000, precios.clone(), deadline);
+            a.realizar_pago(None, 4250, hoy + 300_000, precios.clone(), deadline);
 
             b.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
             b.realizar_pago(None, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
@@ -244,14 +245,14 @@ mod gestor_de_cobros {
             c.realizar_pago(None, 4000, hoy + 100_000, precios.clone(), deadline);
 
             d.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
-            d.realizar_pago(None, 5000, hoy + 100_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 5000, hoy + 100_000, precios.clone(), deadline);
+            d.realizar_pago(None, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
 
             e.realizar_pago(None, 5000, hoy + 100, precios.clone(), deadline);
 
             f.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
-            f.realizar_pago(None, 2000, hoy + 100_000, precios.clone(), deadline);
-            f.realizar_pago(descuento, 1700, hoy + 200_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 2000, hoy + 100_000, precios.clone(), deadline);
+            f.realizar_pago(None, 1700, hoy + 200_000, precios.clone(), deadline);
 
             g.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
 
