@@ -74,6 +74,10 @@ mod gestor_de_cobros {
             r
         }
 
+        /// Devuelve un vector con un listado de todos los socios morosos.
+        /// Se consideran morosos a aquellos socios que tienen pagos pendientes después de la fecha de vencimiento.
+        /// 
+        /// En caso de no haber ningún socio moroso, devuelve un vector vacío.
         #[ink(message)]
         pub fn socios_morosos(&self) -> Vec<Socio> {
             let hoy = self.env().block_timestamp();
@@ -83,8 +87,11 @@ mod gestor_de_cobros {
             return socios;
         }
 
+        /// Devuelve un vector con la lista de todos aquellos socios no morosos que tienen permitido asistir a una actividad deportiva específica del club.
+        /// Se pasa por parámetro el id_deporte correspondiente a la actividad deportiva que se desea consultar.
+        /// 
+        /// En caso de consultar por una actividad que no es practicada por ningún Socio, devuelve un vector vacío.
         #[ink(message)]
-        /// Devuelve un vector con la lista de aquellos socios no morosos que tengan el deporte correspondiente a la id_deporte.
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
             let socios = self.get_socios();
             let iter = socios.into_iter();
@@ -214,7 +221,45 @@ mod gestor_de_cobros {
 
         #[ink::test]
         fn get_recaudacion_test(){
-            todo!();
+            let deadline = 864_000_000;
+            let hoy = 1_690_000_000_000;
+            let precios = Vec::from([5000, 4000, 2000]);
+            let descuento = Some(15);
+            let mut a = Socio::new("Alice".to_string(), 44044044, 1, None, hoy+deadline, precios.clone());
+            let mut b = Socio::new("Bob".to_string(), 45045045, 2, Some(6), hoy+deadline, precios.clone());
+            let mut c = Socio::new("Carol".to_string(), 46046046, 2, Some(1), hoy+deadline, precios.clone());
+            let mut d = Socio::new("Derek".to_string(), 47047047, 1, None, hoy+deadline, precios.clone());
+            let mut e = Socio::new("Emily".to_string(), 48048048, 1, None, hoy+deadline, precios.clone());
+            let mut f = Socio::new("Frank".to_string(), 49049049, 3, None, hoy+deadline, precios.clone());
+            let mut g = Socio::new("Gary".to_string(), 50050050, 3, None, hoy+deadline, precios.clone());
+            
+            a.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
+            a.realizar_pago(None, 5000, hoy + 100_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 4250, hoy + 300_000, precios.clone(), deadline);
+
+            b.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
+            b.realizar_pago(None, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
+
+            c.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
+            c.realizar_pago(None, 4000, hoy + 100_000, precios.clone(), deadline);
+
+            d.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
+            d.realizar_pago(None, 5000, hoy + 100_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
+
+            e.realizar_pago(None, 5000, hoy + 100, precios.clone(), deadline);
+
+            f.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
+            f.realizar_pago(None, 2000, hoy + 100_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 1700, hoy + 200_000, precios.clone(), deadline);
+
+            g.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
+
+            let gestor = GestorDeCobros::new();
+
+            assert_eq!(gestor.get_recaudacion()[0].monto, 33_500);
+            assert_eq!(gestor.get_recaudacion()[1].monto, 16_000);
+            assert_eq!(gestor.get_recaudacion()[2].monto, 7_700);
         }
 
         #[ink::test]
