@@ -5,9 +5,9 @@ mod gestor_de_cobros {
     use club_sem_rust::Socio;
     use club_sem_rust::ClubSemRustRef;
 
-    use ink::prelude::string::String;
+
     use ink::prelude::vec::Vec;
-    use ink::prelude::string::ToString;
+
 
     #[ink(storage)]
     pub struct GestorDeCobros {
@@ -123,22 +123,78 @@ mod gestor_de_cobros {
         }
         /// Método auxiliar para conversión de Fecha a Timestamp.
         /// 
-        /// 1 mes (30.44 días) 	2_629_743_000 mili segundos.
-        /// 1 año (365.24 días) 	 31_556_926_000 mili segundos.
+        /// 1 día = 86_400_000 mili segundos
         /// 
         /// # Panic
         /// 
         /// No funciona para fechas más antiguas que el Epoch de Unix (1ro de Enero, 1970).
         #[ink(message)]
         pub fn date_to_timestamp(&self, mes:u64, año:u64) -> Timestamp {
+            if mes < 1 || mes > 12{
+                panic!("El número de mes enviado no es válido");
+            }
             if año < 1970 {
                 panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970");
             }else{
-                let segs_años: u64 = (año - 1970) * 31_556_926_000;
-                let segs_mes: u64 = 2_629_743_000 * (mes-1);
-                return  segs_años+segs_mes as Timestamp;
+                let mut segs_años: u64 = 0;
+                for i in 1970..año{
+                    if self.es_bisiesto(i as u16){
+                        segs_años += 86_400_000 * 366;
+                    }else{
+                        segs_años += 86_400_000 * 365;
+                    }
+                }
+                let mut segs_meses: u64 = 0;
+                if mes == 1 { return  segs_años as Timestamp;
+                }else{
+                    for j in 1..mes{
+                        match j {
+                            1 => segs_meses += 86_400_000*31,
+                            2 => { if self.es_bisiesto(año as u16){
+                                segs_meses += 86_400_000*29;
+                                }else{
+                                    segs_meses += 86_400_000*28;
+                                }
+                            },
+                            3 => segs_meses += 86_400_000*31,
+                            4 => segs_meses += 86_400_000*30,
+                            5 => segs_meses += 86_400_000*31,
+                            6 => segs_meses += 86_400_000*30,
+                            7 => segs_meses += 86_400_000*31,
+                            8 => segs_meses += 86_400_000*31,
+                            9 => segs_meses += 86_400_000*30,
+                            10 => segs_meses += 86_400_000*31,
+                            11 => segs_meses += 86_400_000*30,
+                            12 => segs_meses += 86_400_000*31,
+                            _ => panic!("El número de mes enviado no es válido"),
+                        }
+                    }
+                    return  segs_años + segs_meses as Timestamp;    
+                }
             }
         }
+
+        #[ink(message)]
+        pub fn es_bisiesto(&self, año:u16) -> bool {
+            if año %4 !=0 {
+                return false;
+            }else{
+                if año %4 == 0 && año % 100 != 0{
+                    return true;
+                }else{
+                    if año % 4 == 0 && año % 100 == 0 && año % 400 != 0{
+                        return false;
+                    }else{
+                        if año % 4 == 0 && año % 100 == 0 && año % 400 == 0 {
+                            return true;
+                        }else{
+                            return false;
+                        } 
+                    }
+                }
+            }
+        }
+
     }
 
     #[cfg(test)]
@@ -150,10 +206,13 @@ mod gestor_de_cobros {
         #[ink::test]
         pub fn test_date_to_timestamp(){
             let gestor = GestorDeCobros::new();
-            let result = gestor.date_to_timestamp(7, 2023);
+            let result_12 = gestor.date_to_timestamp(12, 2023);
+            let result_1 = gestor.date_to_timestamp(1, 2023);
+            let result_2 = gestor.date_to_timestamp(2, 2023);
 
-            assert_eq!(result, 1_688_295_536_000);
-
+            assert_eq!(result_12, 1_701_388_800_000);
+            assert_eq!(result_1, 1_672_531_200_000);
+            assert_eq!(result_2, 1_675_209_600_000);
         }
 
         #[ink::test]
@@ -163,8 +222,7 @@ mod gestor_de_cobros {
 
             let gestor = GestorDeCobros::new();
 
-            assert_eq!(gestor.get_recaudacion(7, 2023), 50_200);
-        
+            assert_eq!(gestor.get_recaudacion(7, 2023), 41_950);
         }
 
         #[ink::test]
@@ -255,7 +313,9 @@ mod gestor_de_cobros {
 
             assert_eq!(esperado, resultado, "Se esperaba {:#?} y se obtuvo {:#?}", esperado, resultado);
         }
+    
     }
+
 }
 
 
