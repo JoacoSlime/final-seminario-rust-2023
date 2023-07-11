@@ -127,14 +127,15 @@ mod gestor_de_cobros {
         /// 
         /// # Panic
         /// 
-        /// No funciona para fechas más antiguas que el Epoch de Unix (1ro de Enero, 1970).
+        ///  - No funciona para fechas más antiguas que el Epoch de Unix (1ro de Enero, 1970).
+        ///  - Se debe ingresar un mes del 1 al 12, devuelve panic si se ingresa un número por fuera de este rango.
         #[ink(message)]
         pub fn date_to_timestamp(&self, mes:u64, año:u64) -> Timestamp {
             if mes < 1 || mes > 12{
                 panic!("El número de mes enviado no es válido");
             }
             if año < 1970 {
-                panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970");
+                panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970)");
             }else{
                 let mut segs_años: u64 = 0;
                 for i in 1970..año{
