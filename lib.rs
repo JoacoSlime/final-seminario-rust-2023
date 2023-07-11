@@ -1,18 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 #[ink::contract]
 mod gestor_de_cobros {
     use club_sem_rust::Recibo;
     use club_sem_rust::Socio;
     use club_sem_rust::ClubSemRustRef;
 
-    use ink::prelude::string::String;
+
     use ink::prelude::vec::Vec;
-    use ink::prelude::string::ToString;
-    
-    extern crate chrono;
-    use chrono::prelude::*;
-    use chrono::{DateTime, Utc};
+
 
     #[ink(storage)]
     pub struct GestorDeCobros {
@@ -21,6 +16,7 @@ mod gestor_de_cobros {
     }
 
     impl GestorDeCobros {
+
         #[ink(constructor)]
         #[cfg(not(test))]
         pub fn new(club_sem_rust: ClubSemRustRef) -> Self {
@@ -101,100 +97,105 @@ mod gestor_de_cobros {
             ).collect()
         }
 
-        /// Genera un vector con la recaudacion de cada Categoría durante el transcurso de un mes,
-        /// esto significa, la suma de todos los montos pagados a lo largo de 30 días
-        /// de todos los Recibos clasificados por Categorías. 
+        /// Recibe mes y año y devuelve la recaudación total de ese mes
+        /// La recaudación cuenta todos los pagos realizados por todos los socios de todas las categorías.
         /// 
         /// Se considera el paso de 30 días como el paso de un mes.
         /// 2_592_000_000 representa 30 dias para el tipo Timestamp.
         /// 
-        /// Se contará la Recaudación para cada una de las tres Categorías
-        /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
-        /// 
         #[ink(message)]
-        pub fn get_recaudacion(&self) -> Vec<Recaudacion> {
+        pub fn get_recaudacion(&self, mes:u8, año:u16) -> u128 {
+
             let socios:Vec<Socio> = self.get_socios();
-            let mut vec_recaudacion:Vec<Recaudacion> = Vec::new();
 
-            let fecha_hoy:Timestamp = self.env().block_timestamp();
+            let fecha_from: Timestamp = self.date_to_timestamp(mes as u64, año as u64);
+            let fecha_to: Timestamp = self.date_to_timestamp(mes as u64, año as u64) + 2_592_000_000;
+
+            let recibos: Vec<Recibo> = socios.iter()
+            .map(|s| s.generar_recibos()).flatten().collect();
+            let recaudacion:u128 = recibos.iter()
+            .filter(|r| r.fecha_entre(fecha_from, fecha_to))
+            .map(|r| r.get_monto())
+            .sum();
             
-            let closure = |s: &Socio, n: u32| {
-                if s.mi_categoria(n) {
-                    Some(s.generar_recibos())
-                } else {
-                    None
-                }
-            };
-
-            let recibos_categoria_a: Vec<Recibo> = socios.iter()
-            .filter_map(|s| closure(s,1)).flatten().collect();
-            let recaudacion_categoria_a:u128 = recibos_categoria_a.iter()
-            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
-            .map(|r| r.get_monto())
-            .count() as u128;
-
-            let recaudacion_a: Recaudacion = Recaudacion::new(recaudacion_categoria_a, fecha_hoy, 1);
-            
-            let recibos_categoria_b:Vec<Recibo> = socios.iter()
-            .filter_map(|s| closure(s,2)).flatten().collect();
-            let recaudacion_categoria_b:u128 = recibos_categoria_b.iter()
-            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
-            .map(|r| r.get_monto())
-            .count() as u128;
-
-            let recaudacion_b: Recaudacion = Recaudacion::new(recaudacion_categoria_b, fecha_hoy, 2);
-
-            let recibos_categoria_c:Vec<Recibo> = socios.iter()
-            .filter_map(|s| closure(s,3)).flatten().collect();
-            let recaudacion_categoria_c:u128 = recibos_categoria_c.iter()
-            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
-            .map(|r| r.get_monto())
-            .count() as u128;
-
-            let recaudacion_c: Recaudacion = Recaudacion::new(recaudacion_categoria_c, fecha_hoy, 3);
-
-            vec_recaudacion.push(recaudacion_a);
-            vec_recaudacion.push(recaudacion_b);
-            vec_recaudacion.push(recaudacion_c);
-
-            return vec_recaudacion;
+            return recaudacion;
 
         }
-    }
-
-    #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
-    #[cfg_attr(
-        feature = "std",
-        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-    )]
-
-    pub struct Recaudacion{
-        monto: u128,
-        fecha: String,
-        categoria: String,
-    }
-    /// Construye una nueva Recaudacion.
-    /// Representa la recaudación total de una determinada Categoría a lo largo de un mes.
-    /// 
-    /// # Panics
-    /// 
-    /// Puede llegar a devolver panic si se ingresa un número de id_categoria inválido.
-    impl Recaudacion {
-        pub fn new(monto: u128, fecha: Timestamp, categoria: u8) -> Recaudacion{
-            let naive = NaiveDateTime::from_timestamp_opt(fecha as i64, 0);
-            if naive.is_some(){
-                let datetime: DateTime<Utc> = DateTime::from_utc(naive.unwrap(), Utc);
-                let timestamp_string = datetime.format("%d/%m/%Y").to_string();
-                match categoria {
-                    1 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria A".to_string() },
-                    2 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria B".to_string() },
-                    3 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria C".to_string() },
-                    _ => panic!("Categoría inválida."),
-                }
+        /// Método auxiliar para conversión de Fecha a Timestamp.
+        /// 
+        /// 1 día = 86_400_000 mili segundos
+        /// 
+        /// # Panic
+        /// 
+        ///  - No funciona para fechas más antiguas que el Epoch de Unix (1ro de Enero, 1970).
+        ///  - Se debe ingresar un mes del 1 al 12, devuelve panic si se ingresa un número por fuera de este rango.
+        #[ink(message)]
+        pub fn date_to_timestamp(&self, mes:u64, año:u64) -> Timestamp {
+            if mes < 1 || mes > 12{
+                panic!("El número de mes enviado no es válido");
+            }
+            if año < 1970 {
+                panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970)");
             }else{
-                panic!("La Fecha recibida no es válida.")
+                let mut segs_años: u64 = 0;
+                for i in 1970..año{
+                    if self.es_bisiesto(i as u16){
+                        segs_años += 86_400_000 * 366;
+                    }else{
+                        segs_años += 86_400_000 * 365;
+                    }
+                }
+                let mut segs_meses: u64 = 0;
+                if mes == 1 { return  segs_años as Timestamp;
+                }else{
+                    for j in 1..mes{
+                        match j {
+                            1 => segs_meses += 86_400_000*31,
+                            2 => { if self.es_bisiesto(año as u16){
+                                segs_meses += 86_400_000*29;
+                                }else{
+                                    segs_meses += 86_400_000*28;
+                                }
+                            },
+                            3 => segs_meses += 86_400_000*31,
+                            4 => segs_meses += 86_400_000*30,
+                            5 => segs_meses += 86_400_000*31,
+                            6 => segs_meses += 86_400_000*30,
+                            7 => segs_meses += 86_400_000*31,
+                            8 => segs_meses += 86_400_000*31,
+                            9 => segs_meses += 86_400_000*30,
+                            10 => segs_meses += 86_400_000*31,
+                            11 => segs_meses += 86_400_000*30,
+                            12 => segs_meses += 86_400_000*31,
+                            _ => panic!("El número de mes enviado no es válido"),
+                        }
+                    }
+                    return  segs_años + segs_meses as Timestamp;    
+                }
             }
         }
+
+        #[ink(message)]
+        pub fn es_bisiesto(&self, año:u16) -> bool {
+            if año %4 !=0 {
+                return false;
+            }else{
+                if año %4 == 0 && año % 100 != 0{
+                    return true;
+                }else{
+                    if año % 4 == 0 && año % 100 == 0 && año % 400 != 0{
+                        return false;
+                    }else{
+                        if año % 4 == 0 && año % 100 == 0 && año % 400 == 0 {
+                            return true;
+                        }else{
+                            return false;
+                        } 
+                    }
+                }
+            }
+        }
+
     }
 
     #[cfg(test)]
@@ -202,65 +203,27 @@ mod gestor_de_cobros {
         use club_sem_rust::Socio;
 
         use super::GestorDeCobros;
-        use super::Recaudacion;
 
         #[ink::test]
-        #[should_panic(expected = "Categoría inválida.")]
-        fn new_recaudacion_test_panic(){
-            Recaudacion::new(2000, 1_000_000, 0);
-        }
+        pub fn test_date_to_timestamp(){
+            let gestor = GestorDeCobros::new();
+            let result_12 = gestor.date_to_timestamp(12, 2023);
+            let result_1 = gestor.date_to_timestamp(1, 2023);
+            let result_2 = gestor.date_to_timestamp(2, 2023);
 
-        #[ink::test]
-        fn new_recaudacion_test_fecha(){
-            let recaudacion: Recaudacion= Recaudacion::new(2000, 986007600, 1);
-            let esperado = "31/03/2001".to_string();
-            let resultado = recaudacion.fecha;
-
-            assert_eq!(esperado, resultado, "se esperaba {:?} y se recibió {:?}", esperado, resultado)
+            assert_eq!(result_12, 1_701_388_800_000);
+            assert_eq!(result_1, 1_672_531_200_000);
+            assert_eq!(result_2, 1_675_209_600_000);
         }
 
         #[ink::test]
         fn get_recaudacion_test(){
-            let deadline = 864_000_000;
-            let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
+            let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000; // Saturday, July 22, 2023 4:26:40 AM
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
-            let precios = Vec::from([5000, 4000, 2000]);
-            let descuento = Some(15);
-            let mut a = Socio::new("Alice".to_string(), 44044044, 1, None, hoy+deadline, precios.clone());
-            let mut b = Socio::new("Bob".to_string(), 45045045, 2, Some(6), hoy+deadline, precios.clone());
-            let mut c = Socio::new("Carol".to_string(), 46046046, 2, Some(1), hoy+deadline, precios.clone());
-            let mut d = Socio::new("Derek".to_string(), 47047047, 1, None, hoy+deadline, precios.clone());
-            let mut e = Socio::new("Emily".to_string(), 48048048, 1, None, hoy+deadline, precios.clone());
-            let mut f = Socio::new("Frank".to_string(), 49049049, 3, None, hoy+deadline, precios.clone());
-            let mut g = Socio::new("Gary".to_string(), 50050050, 3, None, hoy+deadline, precios.clone());
-            
-            a.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
-            a.realizar_pago(descuento, 5000, hoy + 100_000, precios.clone(), deadline);
-            a.realizar_pago(None, 4250, hoy + 300_000, precios.clone(), deadline);
-
-            b.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
-            b.realizar_pago(None, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
-
-            c.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
-            c.realizar_pago(None, 4000, hoy + 100_000, precios.clone(), deadline);
-
-            d.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
-            d.realizar_pago(descuento, 5000, hoy + 100_000, precios.clone(), deadline);
-            d.realizar_pago(None, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
-
-            e.realizar_pago(None, 5000, hoy + 100, precios.clone(), deadline);
-
-            f.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
-            f.realizar_pago(descuento, 2000, hoy + 100_000, precios.clone(), deadline);
-            f.realizar_pago(None, 1700, hoy + 200_000, precios.clone(), deadline);
-
-            g.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
 
             let gestor = GestorDeCobros::new();
 
-            assert_eq!(gestor.get_recaudacion()[0].monto, 33_500);
-            assert_eq!(gestor.get_recaudacion()[1].monto, 16_000);
-            assert_eq!(gestor.get_recaudacion()[2].monto, 7_700);
+            assert_eq!(gestor.get_recaudacion(7, 2023), 41_950);
         }
 
         #[ink::test]
@@ -351,7 +314,9 @@ mod gestor_de_cobros {
 
             assert_eq!(esperado, resultado, "Se esperaba {:#?} y se obtuvo {:#?}", esperado, resultado);
         }
+    
     }
+
 }
 
 

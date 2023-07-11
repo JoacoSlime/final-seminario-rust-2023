@@ -2233,4 +2233,115 @@ mod club_sem_rust {
             }
         }
     }
+
+	 #[cfg(test)]
+    mod socio_tests {
+        use crate::club_sem_rust::Categoria;
+        use crate::club_sem_rust::Deporte;
+        use crate::club_sem_rust::Recibo;
+        use crate::club_sem_rust::Socio;
+
+        
+        //SOCIO TEST
+        #[test]
+        fn new_socio_test(){
+            let precios_categorias = Vec::from([5000, 3000, 2000]);
+            let en30dias =  864_000_000 + 864_000_000 + 864_000_000;
+            let socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+            let socio2 = Socio::new("Juana".to_string(), 23245, 1, None, en30dias, precios_categorias );
+            let socio3 = Socio::new("Carlos".to_string(), 23445, 3, None, en30dias, precios_categorias );
+        }
+        #[test]
+        #[should_panic]
+        fn new_socio_test_panic(){
+            let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+            let precios_categorias = Vec::from([5000, 3000, 2000]);
+            let socio1 = Socio::new("Luis".to_string(), 2345, 1, Some(3), en30dias, precios_categorias );
+            let socio2 = Socio::new("Juana".to_string(), 23245, 2, None, en30dias, precios_categorias );
+            let socio3 = Socio::new("Carlos".to_string(), 23445, 3, Some(4), en30dias, precios_categorias );
+        }
+        
+        #[test]
+        fn puede_hacer_deporte_test(){
+            
+            let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+            let precios_categorias = Vec::from([5000, 3000, 2000]);
+            let socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+            let socio2 = Socio::new("Juana".to_string(), 23245, 1, None, en30dias, precios_categorias );
+            let socio3 = Socio::new("Carlos".to_string(), 23445, 3, None, en30dias, precios_categorias );
+
+            assert_eq!(socio1.puede_hacer_deporte(3), true);
+            assert_ne!(socio1.puede_hacer_deporte(2), true);
+            for i in 1..9{
+                assert_ne!(socio2.puede_hacer_deporte(i), true);
+                assert_eq!(socio3.puede_hacer_deporte(i), true);
+            } 
+            
+        }
+        #[test]
+        #[should_panic]
+        fn puede_hacer_deporte_test_panic(){
+            let precios_categorias = Vec::from([5000, 3000, 2000]);
+            let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+            let socio2 = Socio::new("Juana".to_string(), 23245, 1, None, en30dias, precios_categorias );
+            for i in 1..9{
+                assert_ne!(socio2.puede_hacer_deporte(i), true);
+            }
+        }
+        
+       #[test]
+       fn generar_recibos_y_realizar_pago_test(){
+        let precios_categorias = Vec::from([5000, 3000, 2000]);
+        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+        assert_eq!(socio1.es_moroso(500), true);
+        socio1.realizar_pago(None, 3000, en30dias, precios_categorias, en30dias );
+        assert_eq!(socio1.cumple_bonificacion(1), true);
+        let recibos = socio1.generar_recibos();
+        assert_eq!(socio1.es_moroso(en30dias), false);
+       }
+       
+       #[test]
+       fn cambiar_categoria_test(){
+        let precios_categorias = Vec::from([5000, 3000, 2000]);
+        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+        socio1.cambiar_categoria(3, None);
+        socio1.cambiar_categoria(1, None);
+        socio1.cambiar_categoria(2, Some(5));
+       }
+       #[test]
+       #[should_panic]
+       fn cambiar_categoria_test_panic(){
+        let precios_categorias = Vec::from([5000, 3000, 2000]);
+        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+        socio1.cambiar_categoria(3, Some(4));
+        socio1.cambiar_categoria(1, Some(3));
+        socio1.cambiar_categoria(2, Some(2));
+       }
+       #[test]
+       fn get_mi_deporte_test(){
+        let precios_categorias = Vec::from([5000, 3000, 2000]);
+        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+        let mut deportes:Option<Vec<Deporte>> = socio1.get_mi_deporte();
+        socio1.cambiar_categoria(3, None);
+        deportes = socio1.get_mi_deporte();
+        socio1.cambiar_categoria(1, None);
+        deportes = socio1.get_mi_deporte();
+        socio1.cambiar_categoria(2, Some(5));
+        deportes = socio1.get_mi_deporte();
+       }
+       
+       #[test]
+       fn mi_categoria_test(){
+        let precios_categorias = Vec::from([5000, 3000, 2000]);
+        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
+        assert_eq!(socio1.mi_categoria(2), true );
+        assert_ne!(socio1.mi_categoria(3), true);
+       }
+
+     }
 }
