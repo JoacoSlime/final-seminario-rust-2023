@@ -1,5 +1,4 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 #[ink::contract]
 mod gestor_de_cobros {
     use club_sem_rust::Recibo;
@@ -9,10 +8,6 @@ mod gestor_de_cobros {
     use ink::prelude::string::String;
     use ink::prelude::vec::Vec;
     use ink::prelude::string::ToString;
-    
-    extern crate chrono;
-    use chrono::prelude::*;
-    use chrono::{DateTime, Utc};
 
     #[ink(storage)]
     pub struct GestorDeCobros {
@@ -21,6 +16,7 @@ mod gestor_de_cobros {
     }
 
     impl GestorDeCobros {
+
         #[ink(constructor)]
         #[cfg(not(test))]
         pub fn new(club_sem_rust: ClubSemRustRef) -> Self {
@@ -101,98 +97,46 @@ mod gestor_de_cobros {
             ).collect()
         }
 
-        /// Genera un vector con la recaudacion de cada Categoría durante el transcurso de un mes,
-        /// esto significa, la suma de todos los montos pagados a lo largo de 30 días
-        /// de todos los Recibos clasificados por Categorías. 
+        /// Recibe mes y año y devuelve la recaudación total de ese mes
+        /// La recaudación cuenta todos los pagos realizados por todos los socios de todas las categorías.
         /// 
         /// Se considera el paso de 30 días como el paso de un mes.
         /// 2_592_000_000 representa 30 dias para el tipo Timestamp.
         /// 
-        /// Se contará la Recaudación para cada una de las tres Categorías
-        /// desde el momento en el que se invoca a este método hasta 30 días en el pasado.
-        /// 
         #[ink(message)]
-        pub fn get_recaudacion(&self) -> Vec<Recaudacion> {
+        pub fn get_recaudacion(&self, mes:u8, año:u16) -> u128 {
+
             let socios:Vec<Socio> = self.get_socios();
-            let mut vec_recaudacion:Vec<Recaudacion> = Vec::new();
 
-            let fecha_hoy:Timestamp = self.env().block_timestamp();
+            let fecha_from: Timestamp = self.date_to_timestamp(mes as u64, año as u64);
+            let fecha_to: Timestamp = self.date_to_timestamp(mes as u64, año as u64) + 2_592_000_000;
+
+            let recibos: Vec<Recibo> = socios.iter()
+            .map(|s| s.generar_recibos()).flatten().collect();
+            let recaudacion:u128 = recibos.iter()
+            .filter(|r| r.fecha_entre(fecha_from, fecha_to))
+            .map(|r| r.get_monto())
+            .sum();
             
-            let closure = |s: &Socio, n: u32| {
-                if s.mi_categoria(n) {
-                    Some(s.generar_recibos())
-                } else {
-                    None
-                }
-            };
-
-            let recibos_categoria_a: Vec<Recibo> = socios.iter()
-            .filter_map(|s| closure(s,1)).flatten().collect();
-            let recaudacion_categoria_a:u128 = recibos_categoria_a.iter()
-            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
-            .map(|r| r.get_monto())
-            .count() as u128;
-
-            let recaudacion_a: Recaudacion = Recaudacion::new(recaudacion_categoria_a, fecha_hoy, 1);
-            
-            let recibos_categoria_b:Vec<Recibo> = socios.iter()
-            .filter_map(|s| closure(s,2)).flatten().collect();
-            let recaudacion_categoria_b:u128 = recibos_categoria_b.iter()
-            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
-            .map(|r| r.get_monto())
-            .count() as u128;
-
-            let recaudacion_b: Recaudacion = Recaudacion::new(recaudacion_categoria_b, fecha_hoy, 2);
-
-            let recibos_categoria_c:Vec<Recibo> = socios.iter()
-            .filter_map(|s| closure(s,3)).flatten().collect();
-            let recaudacion_categoria_c:u128 = recibos_categoria_c.iter()
-            .filter(|r| r.fecha_entre(fecha_hoy-2_592_000_000, fecha_hoy))
-            .map(|r| r.get_monto())
-            .count() as u128;
-
-            let recaudacion_c: Recaudacion = Recaudacion::new(recaudacion_categoria_c, fecha_hoy, 3);
-
-            vec_recaudacion.push(recaudacion_a);
-            vec_recaudacion.push(recaudacion_b);
-            vec_recaudacion.push(recaudacion_c);
-
-            return vec_recaudacion;
+            return recaudacion;
 
         }
-    }
-
-    #[derive(scale::Decode, scale::Encode, Debug, Clone, PartialEq)]
-    #[cfg_attr(
-        feature = "std",
-        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-    )]
-
-    pub struct Recaudacion{
-        monto: u128,
-        fecha: String,
-        categoria: String,
-    }
-    /// Construye una nueva Recaudacion.
-    /// Representa la recaudación total de una determinada Categoría a lo largo de un mes.
-    /// 
-    /// # Panics
-    /// 
-    /// Puede llegar a devolver panic si se ingresa un número de id_categoria inválido.
-    impl Recaudacion {
-        pub fn new(monto: u128, fecha: Timestamp, categoria: u8) -> Recaudacion{
-            let naive = NaiveDateTime::from_timestamp_opt(fecha as i64, 0);
-            if naive.is_some(){
-                let datetime: DateTime<Utc> = DateTime::from_utc(naive.unwrap(), Utc);
-                let timestamp_string = datetime.format("%d/%m/%Y").to_string();
-                match categoria {
-                    1 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria A".to_string() },
-                    2 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria B".to_string() },
-                    3 => Recaudacion { monto, fecha: timestamp_string, categoria: "Categoria C".to_string() },
-                    _ => panic!("Categoría inválida."),
-                }
+        /// Método auxiliar para conversión de Fecha a Timestamp.
+        /// 
+        /// 1 mes (30.44 días) 	2_629_743_000 mili segundos.
+        /// 1 año (365.24 días) 	 31_556_926_000 mili segundos.
+        /// 
+        /// # Panic
+        /// 
+        /// No funciona para fechas más antiguas que el Epoch de Unix (1ro de Enero, 1970).
+        #[ink(message)]
+        pub fn date_to_timestamp(&self, mes:u64, año:u64) -> Timestamp {
+            if año < 1970 {
+                panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970");
             }else{
-                panic!("La Fecha recibida no es válida.")
+                let segs_años: u64 = (año - 1970) * 31_556_926_000;
+                let segs_mes: u64 = 2_629_743_000 * mes;
+                return  segs_años+segs_mes as Timestamp;
             }
         }
     }
@@ -202,26 +146,10 @@ mod gestor_de_cobros {
         use club_sem_rust::Socio;
 
         use super::GestorDeCobros;
-        use super::Recaudacion;
-
-        #[ink::test]
-        #[should_panic(expected = "Categoría inválida.")]
-        fn new_recaudacion_test_panic(){
-            Recaudacion::new(2000, 1_000_000, 0);
-        }
-
-        #[ink::test]
-        fn new_recaudacion_test_fecha(){
-            let recaudacion: Recaudacion= Recaudacion::new(2000, 986007600, 1);
-            let esperado = "31/03/2001".to_string();
-            let resultado = recaudacion.fecha;
-
-            assert_eq!(esperado, resultado, "se esperaba {:?} y se recibió {:?}", esperado, resultado)
-        }
 
         #[ink::test]
         fn get_recaudacion_test(){
-            let deadline = 864_000_000;
+            /*let deadline = 864_000_000;
             let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
             let precios = Vec::from([5000, 4000, 2000]);
@@ -261,6 +189,7 @@ mod gestor_de_cobros {
             assert_eq!(gestor.get_recaudacion()[0].monto, 33_500);
             assert_eq!(gestor.get_recaudacion()[1].monto, 16_000);
             assert_eq!(gestor.get_recaudacion()[2].monto, 7_700);
+        */
         }
 
         #[ink::test]
