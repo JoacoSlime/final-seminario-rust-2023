@@ -135,7 +135,7 @@ mod gestor_de_cobros {
                 panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970");
             }else{
                 let segs_años: u64 = (año - 1970) * 31_556_926_000;
-                let segs_mes: u64 = 2_629_743_000 * mes-1;
+                let segs_mes: u64 = 2_629_743_000 * (mes-1);
                 return  segs_años+segs_mes as Timestamp;
             }
         }
@@ -148,47 +148,22 @@ mod gestor_de_cobros {
         use super::GestorDeCobros;
 
         #[ink::test]
+        pub fn test_date_to_timestamp(){
+            let gestor = GestorDeCobros::new();
+            let result = gestor.date_to_timestamp(7, 2023);
+
+            assert_eq!(result, 1_688_295_536_000);
+
+        }
+
+        #[ink::test]
         fn get_recaudacion_test(){
-            let deadline = 864_000_000;
-            let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
+            let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000; // Saturday, July 22, 2023 4:26:40 AM
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
-            let precios = Vec::from([5000, 4000, 2000]);
-            let descuento = Some(15);
-            let mut a = Socio::new("Alice".to_string(), 44044044, 1, None, hoy+deadline, precios.clone());
-            let mut b = Socio::new("Bob".to_string(), 45045045, 2, Some(6), hoy+deadline, precios.clone());
-            let mut c = Socio::new("Carol".to_string(), 46046046, 2, Some(1), hoy+deadline, precios.clone());
-            let mut d = Socio::new("Derek".to_string(), 47047047, 1, None, hoy+deadline, precios.clone());
-            let mut e = Socio::new("Emily".to_string(), 48048048, 1, None, hoy+deadline, precios.clone());
-            let mut f = Socio::new("Frank".to_string(), 49049049, 3, None, hoy+deadline, precios.clone());
-            let mut g = Socio::new("Gary".to_string(), 50050050, 3, None, hoy+deadline, precios.clone());
-            
-            a.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
-            a.realizar_pago(descuento, 5000, hoy + 100_000, precios.clone(), deadline);
-            a.realizar_pago(None, 4250, hoy + 300_000, precios.clone(), deadline);
-
-            b.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
-            b.realizar_pago(None, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
-
-            c.realizar_pago(None, 4000, hoy, precios.clone(), deadline);
-            c.realizar_pago(None, 4000, hoy + 100_000, precios.clone(), deadline);
-
-            d.realizar_pago(None, 5000, hoy, precios.clone(), deadline);
-            d.realizar_pago(descuento, 5000, hoy + 100_000, precios.clone(), deadline);
-            d.realizar_pago(None, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
-
-            e.realizar_pago(None, 5000, hoy + 100, precios.clone(), deadline);
-
-            f.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
-            f.realizar_pago(descuento, 2000, hoy + 100_000, precios.clone(), deadline);
-            f.realizar_pago(None, 1700, hoy + 200_000, precios.clone(), deadline);
-
-            g.realizar_pago(None, 2000, hoy, precios.clone(), deadline);
 
             let gestor = GestorDeCobros::new();
 
-            assert_eq!(gestor.get_recaudacion(), 33_500);
-            assert_eq!(gestor.get_recaudacion(), 16_000);
-            assert_eq!(gestor.get_recaudacion(), 7_700);
+            assert_eq!(gestor.get_recaudacion(7, 2023), 50_200);
         
         }
 
