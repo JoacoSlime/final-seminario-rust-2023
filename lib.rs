@@ -135,7 +135,7 @@ mod gestor_de_cobros {
                 panic!("La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970");
             }else{
                 let segs_años: u64 = (año - 1970) * 31_556_926_000;
-                let segs_mes: u64 = 2_629_743_000 * mes;
+                let segs_mes: u64 = 2_629_743_000 * mes-1;
                 return  segs_años+segs_mes as Timestamp;
             }
         }
@@ -149,7 +149,7 @@ mod gestor_de_cobros {
 
         #[ink::test]
         fn get_recaudacion_test(){
-            /*let deadline = 864_000_000;
+            let deadline = 864_000_000;
             let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
             let precios = Vec::from([5000, 4000, 2000]);
@@ -186,10 +186,10 @@ mod gestor_de_cobros {
 
             let gestor = GestorDeCobros::new();
 
-            assert_eq!(gestor.get_recaudacion()[0].monto, 33_500);
-            assert_eq!(gestor.get_recaudacion()[1].monto, 16_000);
-            assert_eq!(gestor.get_recaudacion()[2].monto, 7_700);
-        */
+            assert_eq!(gestor.get_recaudacion(), 33_500);
+            assert_eq!(gestor.get_recaudacion(), 16_000);
+            assert_eq!(gestor.get_recaudacion(), 7_700);
+        
         }
 
         #[ink::test]
