@@ -932,11 +932,13 @@ mod club_sem_rust {
 
     #[cfg(test)]
     mod tests {
+        use crate::club_sem_rust::*;
+
         #[cfg(test)]
         mod deporte_tests {
-            use crate::club_sem_rust::Deporte;
+            use super::*;
             
-            #[test]
+            #[ink::test]
             fn get_deportes_test(){
                 let esperado: Vec<Deporte> = vec![
                     Deporte::Futbol,
@@ -953,7 +955,7 @@ mod club_sem_rust {
                     assert_eq!(esperado, recibido, "Error en Deporte::get_deportes(), se esperaba {:?}, y se recibió {:?}", esperado, recibido)
                 }
                 
-            #[test]
+            #[ink::test]
             fn match_deporte_test() {
                     let ids = [
                         (1, Deporte::Futbol),
@@ -973,7 +975,7 @@ mod club_sem_rust {
                 
             }
 
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "Id del deporte inválido, revise el ID del socio.")]
             fn match_deporte_panic_test() {
                 let _ = Deporte::match_deporte(0);
@@ -983,7 +985,7 @@ mod club_sem_rust {
         
         #[cfg(test)]
         mod club_sem_rust_tests {
-            use crate::club_sem_rust::*;
+            use super::*;
 
             #[ink::test]
             fn new_test(){
@@ -1957,11 +1959,10 @@ mod club_sem_rust {
             
         #[cfg(test)]
         mod categoria_tests {
-            use crate::club_sem_rust::Categoria;
-            use crate::club_sem_rust::Deporte;
+            use super::*;
             
             //CATEGORIA TEST
-            #[test]
+            #[ink::test]
             fn match_categoria_test(){
                 
                 assert_eq!(Categoria::match_categoria(1), Categoria::A);
@@ -1978,20 +1979,20 @@ mod club_sem_rust {
             }
 
             
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn match_categoria_panic_low_test(){
                 let _ = Categoria::match_categoria(0);           
             }
 
             
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn match_categoria_panic_high_test(){
                 let _ = Categoria::match_categoria(4);                
             }
             
-            #[test]
+            #[ink::test]
             fn get_deporte_test(){
                 let categ_a = Categoria::new(1);
                 let categ_b = Categoria::new(2);
@@ -2007,7 +2008,7 @@ mod club_sem_rust {
                 assert_ne!(categ_c.get_deporte(Some(3)), Some(Vec::from([deportes[1].clone()]))); 
             }
 
-            #[test]
+            #[ink::test]
             fn mensual_test(){
                 let categ_a = Categoria::new(1);
                 let categ_b = Categoria::new(2);
@@ -2027,13 +2028,13 @@ mod club_sem_rust {
             }
 
             
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn test_new_panic() {
                 let _ = Categoria::new(4);
             }
 
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "El formato del vector de precios es incorrecto.")]
             fn test_mensual_panic() {
                 let categ_a = Categoria::new(1);
@@ -2042,7 +2043,7 @@ mod club_sem_rust {
             }
 
             
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "No se encontró un ID de deporte")]
             fn test_get_deporte_panic() {
                 let categ_b = Categoria::new(2);
@@ -2052,7 +2053,7 @@ mod club_sem_rust {
         
         #[cfg(test)]
         mod recibo_tests {
-            use crate::club_sem_rust::*;
+            use super::*;
 
             #[ink::test]
             fn test_new(){
@@ -2070,7 +2071,7 @@ mod club_sem_rust {
                 assert_eq!(Recibo::new(nombre, dni, monto, Categoria::A, fecha), esperado);
             }
 
-            #[test]
+            #[ink::test]
             fn test_get_monto(){
                 let nombre:String = "Carlos".to_string();
                 let dni:u32 = 44444444;
@@ -2083,7 +2084,7 @@ mod club_sem_rust {
                 assert_eq!(recibo.get_monto(), esperado);
             }
 
-            #[test]
+            #[ink::test]
             fn test_fecha_entre(){
                 let nombre:String = "Carlos".to_string();
                 let dni:u32 = 44444444;
@@ -2102,9 +2103,9 @@ mod club_sem_rust {
         
         #[cfg(test)]
         mod pago_tests {
-            use crate::club_sem_rust::*;
+            use super::*;
 
-            #[test]
+            #[ink::test]
             #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn test_new_id_panic(){
@@ -2113,7 +2114,7 @@ mod club_sem_rust {
                 Pago::new(vencimiento, id_categoria_invalida, None, Vec::from([5000,4000,2000]));
             }
 
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "La resta causó un overflow")]
             fn test_new_overflow_sub_panic(){
                 let vencimiento: Timestamp = 1_000_000_000;
@@ -2121,7 +2122,7 @@ mod club_sem_rust {
                 Pago::new(vencimiento, id_categoria_invalida, Some(u128::MAX), Vec::from([5000,4000,2000]));
             }
 
-            #[test]
+            #[ink::test]
             #[should_panic(expected = "La multiplicación causó un overflow.")]
             fn test_new_overflow_mul_panic(){
                 let vencimiento: Timestamp = 1_000_000_000;
@@ -2129,7 +2130,7 @@ mod club_sem_rust {
                 Pago::new(vencimiento, id_categoria_invalida, Some(10), Vec::from([u128::MAX,u128::MAX,u128::MAX]));
             }
 
-            #[test]
+            #[ink::test]
             fn test_new_pago(){
                 let pago_con_descuento:Pago = Pago::new(1_000_000_000, 3, Some(10), Vec::from([5000,4000,2000]));
                 let pago_sin_descuento:Pago = Pago::new(1_000_000_000, 3, None, Vec::from([5000,4000,2000]));
@@ -2165,7 +2166,7 @@ mod club_sem_rust {
                 assert_eq!(pago_gratis, esperado_gratis);
             }
             
-            #[test]
+            #[ink::test]
             #[ink::test]
             #[should_panic(expected = "El pago no está pendiente")]
             fn test_realizar_pago_panic_pendiente(){
@@ -2178,7 +2179,7 @@ mod club_sem_rust {
                 
             }
             
-            #[test]
+            #[ink::test]
             #[ink::test]
             #[should_panic(expected = "Monto incorrecto.")]
             fn test_realizar_pago_panic_monto(){
@@ -2190,7 +2191,7 @@ mod club_sem_rust {
                 
             }
 
-            #[test]
+            #[ink::test]
             fn test_realizar_pago(){
                 let mut pago_con_descuento:Pago = Pago::new(1_000_000_000, 3, Some(10), Vec::from([5000,4000,2000]));
                 let mut pago_sin_descuento:Pago = Pago::new(1_000_000_000, 3, None, Vec::from([5000,4000,2000]));
@@ -2221,7 +2222,7 @@ mod club_sem_rust {
                 assert_eq!(pago_sin_descuento, esperado_sin_descuento);
             }
 
-            #[test]
+            #[ink::test]
             #[ink::test]
             fn test_es_moroso(){
                 let precio_categorias:Vec<u128> = Vec::from([5000,4000,2000]);
@@ -2232,116 +2233,120 @@ mod club_sem_rust {
                 
             }
         }
-    }
-
-	 #[cfg(test)]
-    mod socio_tests {
-        use crate::club_sem_rust::Categoria;
-        use crate::club_sem_rust::Deporte;
-        use crate::club_sem_rust::Recibo;
-        use crate::club_sem_rust::Socio;
-
-        
-        //SOCIO TEST
-        #[test]
-        fn new_socio_test(){
-            let precios_categorias = Vec::from([5000, 3000, 2000]);
-            let en30dias =  864_000_000 + 864_000_000 + 864_000_000;
-            let socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-            let socio2 = Socio::new("Juana".to_string(), 23245, 1, None, en30dias, precios_categorias );
-            let socio3 = Socio::new("Carlos".to_string(), 23445, 3, None, en30dias, precios_categorias );
-        }
-        #[test]
-        #[should_panic]
-        fn new_socio_test_panic(){
-            let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-            let precios_categorias = Vec::from([5000, 3000, 2000]);
-            let socio1 = Socio::new("Luis".to_string(), 2345, 1, Some(3), en30dias, precios_categorias );
-            let socio2 = Socio::new("Juana".to_string(), 23245, 2, None, en30dias, precios_categorias );
-            let socio3 = Socio::new("Carlos".to_string(), 23445, 3, Some(4), en30dias, precios_categorias );
-        }
-        
-        #[test]
-        fn puede_hacer_deporte_test(){
+        #[cfg(test)]
+        mod socio_tests {
+            use super::*;
             
-            let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-            let precios_categorias = Vec::from([5000, 3000, 2000]);
-            let socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-            let socio2 = Socio::new("Juana".to_string(), 23245, 1, None, en30dias, precios_categorias );
-            let socio3 = Socio::new("Carlos".to_string(), 23445, 3, None, en30dias, precios_categorias );
-
-            assert_eq!(socio1.puede_hacer_deporte(3), true);
-            assert_ne!(socio1.puede_hacer_deporte(2), true);
-            for i in 1..9{
-                assert_ne!(socio2.puede_hacer_deporte(i), true);
-                assert_eq!(socio3.puede_hacer_deporte(i), true);
-            } 
-            
-        }
-        #[test]
-        #[should_panic]
-        fn puede_hacer_deporte_test_panic(){
-            let precios_categorias = Vec::from([5000, 3000, 2000]);
-            let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-            let socio2 = Socio::new("Juana".to_string(), 23245, 1, None, en30dias, precios_categorias );
-            for i in 1..9{
-                assert_ne!(socio2.puede_hacer_deporte(i), true);
+            #[ink::test]
+            fn new_socio_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias =  864_000_000 + 864_000_000 + 864_000_000;
+                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
+                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias );
             }
-        }
+            #[ink::test]
+            #[should_panic]
+            fn new_socio_test_panic(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, Some(3), en30dias, precios_categorias.clone() );
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 2, None, en30dias, precios_categorias.clone() );
+                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, Some(4), en30dias, precios_categorias );
+            }
+    
+            #[ink::test]
+            fn puede_hacer_deporte_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+    
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
+                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias );
+    
+                assert_eq!(socio1.puede_hacer_deporte(3), true);
+                assert_ne!(socio1.puede_hacer_deporte(2), true);
+                for i in 1..9{
+                    assert_ne!(socio2.puede_hacer_deporte(i), true);
+                    assert_eq!(socio3.puede_hacer_deporte(i), true);
+                } 
+    
+            }
+            #[ink::test]
+            #[should_panic]
+            fn puede_hacer_deporte_test_panic(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.alice, 1, None, en30dias, precios_categorias );
+                for i in 1..9{
+                    assert_ne!(socio2.puede_hacer_deporte(i), true);
+                }
+            }
+    
+            #[ink::test]
+            fn generar_recibos_y_realizar_pago_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                assert_eq!(socio1.es_moroso(500), true);
+                socio1.realizar_pago(None, 3000, 3, en30dias, precios_categorias, en30dias );
+                assert_eq!(socio1.cumple_bonificacion(1), true);
+                let recibos = socio1.generar_recibos();
+                assert_eq!(socio1.es_moroso(en30dias), false);
+            }
+    
+            #[ink::test]
+            fn cambiar_categoria_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                socio1.cambiar_categoria(3, None);
+                socio1.cambiar_categoria(1, None);
+                socio1.cambiar_categoria(2, Some(5));
+            }
+            #[ink::test]
+            #[should_panic]
+            fn cambiar_categoria_test_panic(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                socio1.cambiar_categoria(3, Some(4));
+                socio1.cambiar_categoria(1, Some(3));
+                socio1.cambiar_categoria(2, Some(2));
+            }
+            #[ink::test]
+            fn get_mi_deporte_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                let mut deportes:Option<Vec<Deporte>> = socio1.get_mi_deporte();
+                socio1.cambiar_categoria(3, None);
+                deportes = socio1.get_mi_deporte();
+                socio1.cambiar_categoria(1, None);
+                deportes = socio1.get_mi_deporte();
+                socio1.cambiar_categoria(2, Some(5));
+                deportes = socio1.get_mi_deporte();
+            }
+    
+            #[ink::test]
+            fn mi_categoria_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                assert_eq!(socio1.mi_categoria(2), true );
+                assert_ne!(socio1.mi_categoria(3), true);
+            }
         
-       #[test]
-       fn generar_recibos_y_realizar_pago_test(){
-        let precios_categorias = Vec::from([5000, 3000, 2000]);
-        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-        assert_eq!(socio1.es_moroso(500), true);
-        socio1.realizar_pago(None, 3000, en30dias, precios_categorias, en30dias );
-        assert_eq!(socio1.cumple_bonificacion(1), true);
-        let recibos = socio1.generar_recibos();
-        assert_eq!(socio1.es_moroso(en30dias), false);
-       }
-       
-       #[test]
-       fn cambiar_categoria_test(){
-        let precios_categorias = Vec::from([5000, 3000, 2000]);
-        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-        socio1.cambiar_categoria(3, None);
-        socio1.cambiar_categoria(1, None);
-        socio1.cambiar_categoria(2, Some(5));
-       }
-       #[test]
-       #[should_panic]
-       fn cambiar_categoria_test_panic(){
-        let precios_categorias = Vec::from([5000, 3000, 2000]);
-        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-        socio1.cambiar_categoria(3, Some(4));
-        socio1.cambiar_categoria(1, Some(3));
-        socio1.cambiar_categoria(2, Some(2));
-       }
-       #[test]
-       fn get_mi_deporte_test(){
-        let precios_categorias = Vec::from([5000, 3000, 2000]);
-        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-        let mut deportes:Option<Vec<Deporte>> = socio1.get_mi_deporte();
-        socio1.cambiar_categoria(3, None);
-        deportes = socio1.get_mi_deporte();
-        socio1.cambiar_categoria(1, None);
-        deportes = socio1.get_mi_deporte();
-        socio1.cambiar_categoria(2, Some(5));
-        deportes = socio1.get_mi_deporte();
-       }
-       
-       #[test]
-       fn mi_categoria_test(){
-        let precios_categorias = Vec::from([5000, 3000, 2000]);
-        let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-        let mut socio1 = Socio::new("Luis".to_string(), 2345, 2, Some(3), en30dias, precios_categorias );
-        assert_eq!(socio1.mi_categoria(2), true );
-        assert_ne!(socio1.mi_categoria(3), true);
-       }
-
-     }
+        }
+    }
 }
+
