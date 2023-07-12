@@ -746,7 +746,7 @@ mod club_sem_rust {
                 if id_deporte == Some(2) || id_deporte < Some(1) || id_deporte > Some(8) {
                     panic!("El ID de deporte ingresado es inválido");
                 }else{
-                    let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, hoy, precios);
+                    let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, vencimiento, precios);
                     self.socios.push(socio);
                 }
             }else{
