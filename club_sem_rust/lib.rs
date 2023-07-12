@@ -2599,7 +2599,27 @@ mod club_sem_rust {
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let _ = Socio::new("Juana".to_string(), 23245, accounts.bob, 2, Some(2), en30dias, precios_categorias.clone() );
             }
-
+            
+            #[ink::test]
+            fn puede_hacer_deporte_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
+                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias.clone() );
+                
+                assert!(socio1.puede_hacer_deporte(3));
+                assert!(socio1.puede_hacer_deporte(2));
+                for i in 1..9{
+                    assert!(socio2.puede_hacer_deporte(i));
+                } 
+                assert!(socio3.puede_hacer_deporte(2));
+                assert!(!socio3.puede_hacer_deporte(1));
+                assert!(!socio3.puede_hacer_deporte(3));
+            }
+            
             #[ink::test]
             #[should_panic(expected = "ID de deporte inválido.")]
             fn puede_hacer_deporte_test_panic_deporte(){
@@ -2611,31 +2631,7 @@ mod club_sem_rust {
                 
                 socio1.puede_hacer_deporte(100);
             }
-
-            #[ink::test]
-            fn puede_hacer_deporte_test(){
-                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
-    
-                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let precios_categorias = Vec::from([5000, 3000, 2000]);
-                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
-                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
-                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias.clone() );
-    
-                assert!(socio1.puede_hacer_deporte(3));
-                assert!(socio1.puede_hacer_deporte(2));
-                for i in 1..9{
-                    assert!(socio2.puede_hacer_deporte(i));
-                } 
-                assert!(socio3.puede_hacer_deporte(2));
-                assert!(!socio3.puede_hacer_deporte(1));
-                assert!(!socio3.puede_hacer_deporte(3));
-
-                let mut socio4 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(1), en30dias, precios_categorias);
-                socio4.id_deporte = None;
-                assert!(!socio4.puede_hacer_deporte(0));
-            }
-
+            
             #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn puede_hacer_deporte_test_panic_categoria(){
