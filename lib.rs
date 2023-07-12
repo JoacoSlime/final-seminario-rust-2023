@@ -82,9 +82,9 @@ mod gestor_de_cobros {
         pub fn socios_morosos(&self) -> Vec<Socio> {
             let hoy = self.env().block_timestamp();
             let socios = self.get_socios();
-            let socios = socios.into_iter()
+            let socios_morosos = socios.into_iter()
             .filter(|s| s.es_moroso(hoy)).collect();
-            return socios;
+            return socios_morosos;
         }
 
         /// Devuelve un vector con la lista de todos aquellos socios no morosos que tienen permitido asistir a una actividad deportiva específica del club.
@@ -93,12 +93,24 @@ mod gestor_de_cobros {
         /// En caso de consultar por una actividad que no es practicada por ningún Socio, devuelve un vector vacío.
         #[ink(message)]
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
-            let socios = self.get_socios();
-            let iter = socios.into_iter();
-            iter.filter( |s|
-                s.puede_hacer_deporte(id_deporte) &&
-                !s.es_moroso(self.env().block_timestamp())
-            ).collect()
+            if id_deporte == 2 {
+                let hoy :u64 = self.env().block_timestamp();
+                let socios :Vec<Socio> = self.get_socios();
+                let socios_no_morosos :Vec<Socio> = socios.into_iter()
+                .filter(|s| !s.es_moroso(hoy)).collect();
+                return socios_no_morosos;
+            }else{
+                if id_deporte < 1 || id_deporte > 8 {
+                    panic!("El ID de deporte ingresado es inválido.")
+                }else{
+                    let hoy :u64 = self.env().block_timestamp();
+                    let socios :Vec<Socio> = self.get_socios();
+                    let socios_no_morosos :Vec<Socio> = socios.into_iter()
+                    .filter(|s| s.puede_hacer_deporte(id_deporte) && !s.es_moroso(hoy))
+                    .collect();
+                    return socios_no_morosos;
+                }
+            }
         }
 
         /// Recibe mes y año y devuelve la recaudación total de ese mes
