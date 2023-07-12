@@ -169,7 +169,6 @@ mod gestor_de_cobros {
                             9 => segs_meses += 86_400_000*30,
                             10 => segs_meses += 86_400_000*31,
                             11 => segs_meses += 86_400_000*30,
-                            12 => segs_meses += 86_400_000*31,
                             _ => panic!("El número de mes enviado no es válido"),
                         }
                     }
@@ -208,15 +207,55 @@ mod gestor_de_cobros {
         use super::GestorDeCobros;
 
         #[ink::test]
+        #[should_panic(expected = "La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970)")]
+        pub fn test_panic_date_to_timestamp(){
+            let gestor = GestorDeCobros::new();
+
+            gestor.date_to_timestamp(1, 1969);
+        }
+
+        #[ink::test]
+        #[should_panic(expected = "El número de mes enviado no es válido")]
+        pub fn test_panic_mes_date_to_timestamp(){
+            let gestor = GestorDeCobros::new();
+
+            gestor.date_to_timestamp(13, 2000);
+        }
+
+        #[ink::test]
         pub fn test_date_to_timestamp(){
             let gestor = GestorDeCobros::new();
-            let result_12 = gestor.date_to_timestamp(12, 2023);
+
             let result_1 = gestor.date_to_timestamp(1, 2023);
             let result_2 = gestor.date_to_timestamp(2, 2023);
+            let result_2_bisiesto = gestor.date_to_timestamp(2, 2004);
+            let result_3_bisiesto = gestor.date_to_timestamp(3, 2004);
+            let result_3 = gestor.date_to_timestamp(3, 2023);
+            let result_4 = gestor.date_to_timestamp(4, 2023);
+            let result_5 = gestor.date_to_timestamp(5, 2023);
+            let result_6 = gestor.date_to_timestamp(6, 2023);
+            let result_7 = gestor.date_to_timestamp(7, 2023);
+            let result_8 = gestor.date_to_timestamp(8, 2023);
+            let result_9 = gestor.date_to_timestamp(9, 2023);
+            let result_10 = gestor.date_to_timestamp(10, 2023);
+            let result_11 = gestor.date_to_timestamp(11, 2023);
+            let result_12 = gestor.date_to_timestamp(12, 2023);
 
-            assert_eq!(result_12, 1_701_388_800_000);
             assert_eq!(result_1, 1_672_531_200_000);
             assert_eq!(result_2, 1_675_209_600_000);
+            assert_eq!(result_2_bisiesto, 1_075_593_600_000);
+            assert_eq!(result_3_bisiesto, 1_078_099_200_000);
+            assert_eq!(result_3, 1_677_628_800_000);
+            assert_eq!(result_4, 1_680_307_200_000);
+            assert_eq!(result_5, 1_682_899_200_000);
+            assert_eq!(result_6, 1_685_577_600_000);
+            assert_eq!(result_7, 1_688_169_600_000);
+            assert_eq!(result_8, 1_690_848_000_000);
+            assert_eq!(result_9, 1_693_526_400_000);
+            assert_eq!(result_10, 1_696_118_400_000);
+            assert_eq!(result_11, 1_698_796_800_000);
+            assert_eq!(result_12, 1_701_388_800_000);
+            
         }
 
         #[ink::test]
