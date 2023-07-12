@@ -95,6 +95,12 @@ mod gestor_de_cobros {
         /// Se pasa por parámetro el id_deporte correspondiente a la actividad deportiva que se desea consultar.
         /// 
         /// En caso de consultar por una actividad que no es practicada por ningún Socio, devuelve un vector vacío.
+        /// 
+        /// # Panic
+        /// 
+        /// Puede devolver Panic si el ID de deporte es inválido.
+        /// un ID de deporte válido debe estar entre 1 y 8.
+        /// 
         #[ink(message)]
         pub fn socios_no_morosos(&self, id_deporte: u32) -> Vec<Socio> {
             if id_deporte == 2 {
@@ -193,6 +199,8 @@ mod gestor_de_cobros {
             }
         }
 
+        /// Método auxiliar para el método date_to_timestamp()
+        /// Devuelve true si el año ingresado es bisiesto, false en caso contrario..
         fn es_bisiesto(&self, año:u16) -> bool {
             if año %4 !=0 {
                 return false;

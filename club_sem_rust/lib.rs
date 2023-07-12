@@ -81,22 +81,26 @@ mod club_sem_rust {
         /// assert!(habilitado); 
         /// ```
         pub fn puede_hacer_deporte(&self, id_deporte: u32) -> bool {
-            match self.id_categoria {
-            	1 => return true,
-            	2 => match id_deporte{
-                        2 => return true,
-                        _=> if let Some(id_dep) = self.id_deporte {
-                                return id_dep == id_deporte;
-                            }else{
-                                return false;
-                            },
-                    },
-        		3 => match id_deporte{
-                        2 => return true,
-                        _=> return false,
-                    },
-                _ => panic!("ID de categoría inválido, por favor revise el socio."),
-    	    }
+            if id_deporte > 8 || id_deporte < 1 {
+                panic!("ID de deporte inválido.")
+            }else{
+                match self.id_categoria {
+                    1 => return true,
+                    2 => match id_deporte{
+                            2 => return true,
+                            _=> if let Some(id_dep) = self.id_deporte {
+                                    return id_dep == id_deporte;
+                                }else{
+                                    return false;
+                                },
+                        },
+                    3 => match id_deporte{
+                            2 => return true,
+                            _=> return false,
+                        },
+                    _ => panic!("ID de categoría inválido, por favor revise el socio."),
+                }
+            }
         }
 
         /// Recorre todos los Pagos completados de un Socio y crea un vector de Recibos con los datos relevantes de cada Pago
@@ -954,15 +958,6 @@ mod club_sem_rust {
         /// Itera sobre el vector de AccountId de la estructura y devuelve true si encuentra 
         /// una cuenta que concuerde con el id pasado por parámetro
         fn esta_habilitada(&self, id: AccountId) -> bool {
-            /* 
-                
-                if self.esta_bloqueado == false { return true }
-                else { self.cuentas_habilitadas.iter().any(|account_id| *account_id == id) }
-
-                Porque si esta no está bloqueado, cualquier cuenta tiene acceso a todo,
-                Si está bloqueado, se usa el protocolo de callers con permisos
-
-             */
             !self.esta_bloqueado
             || self.cuentas_habilitadas.iter().any(|account_id| *account_id == id)
             || self.owner == Some(id)
@@ -2606,6 +2601,18 @@ mod club_sem_rust {
             }
 
             #[ink::test]
+            #[should_panic(expected = "ID de deporte inválido.")]
+            fn puede_hacer_deporte_test_panic_deporte(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+    
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                
+                socio1.puede_hacer_deporte(100);
+            }
+
+            #[ink::test]
             fn puede_hacer_deporte_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
     
@@ -2631,7 +2638,7 @@ mod club_sem_rust {
 
             #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
-            fn puede_hacer_deporte_test_panic(){
+            fn puede_hacer_deporte_test_panic_categoria(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let socio = Socio{
                     id_deporte: Some(3),
