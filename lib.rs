@@ -19,7 +19,12 @@ mod gestor_de_cobros {
 
         #[ink(constructor)]
         #[cfg(not(test))]
-        pub fn new(club_sem_rust: ClubSemRustRef) -> Self {
+        pub fn new(club_sem_rust_hash: Hash) -> Self {
+            let club_sem_rust =  ClubSemRustRef::default()
+                .code_hash(club_sem_rust_hash)
+                .endowment(0)
+                .salt_bytes([0xFE, 0xAE, 0xDE, 0xAD, 0xCA, 0xFE])
+                .instantiate();
             Self {club_sem_rust}
         }
         
