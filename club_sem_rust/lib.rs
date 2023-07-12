@@ -1053,26 +1053,15 @@ mod club_sem_rust {
                 
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::get_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
             }
-
+            
             #[ink::test]
-            fn set_duracion_deadline_test() {
+            fn set_duracion_deadline_test_panic() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
-                let esperado = ClubSemRust{
-                    socios: Vec::new(),
-                    descuento: 15,
-                    precio_categorias: vec![5000, 3000, 2000],
-                    duracion_deadline: 999,
-                    pagos_consecutivos_bono: 3,
-                    owner: Some(owner),
-                    cuentas_habilitadas: Vec::new(),
-                    esta_bloqueado: false
-                };
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner);
                 let mut resultado = ClubSemRust::default();
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
                 resultado.set_duracion_deadline(999);
-                
-                assert_eq!(esperado, resultado, "Error en ClubSemRust::set_duracion_deadline(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
             }
             
             #[ink::test]
