@@ -743,9 +743,9 @@ mod club_sem_rust {
             if self.esta_habilitada(self.env().caller()){
                 let vencimiento = self.env().block_timestamp().checked_add(self.duracion_deadline).expect("Overflow en la suma de tiempo");
                 let precios = self.precio_categorias.clone();
-                if id_deporte == Some(2) || id_deporte < Some(1) || id_deporte > Some(8) {
+                if (id_categoria == 2) && ((id_deporte == Some(2)) || (id_deporte < Some(1)) || (id_deporte > Some(8))) {
                     panic!("El ID de deporte ingresado es inválido");
-                }else{
+                } else {
                     let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, vencimiento, precios);
                     self.socios.push(socio);
                 }
