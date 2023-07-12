@@ -612,7 +612,11 @@ mod club_sem_rust {
                 socios: Vec::new(),
                 descuento,
                 duracion_deadline,
-                precio_categorias:Vec::from([precio_categoria_a, precio_categoria_b ,precio_categoria_c]),
+                precio_categorias:Vec::from([
+                    precio_categoria_a * 1_000_000_000_000,
+                    precio_categoria_b * 1_000_000_000_000,
+                    precio_categoria_c * 1_000_000_000_000
+                ]),
                 pagos_consecutivos_bono,
                 cuentas_habilitadas: Vec::new(),
                 esta_bloqueado: false,
@@ -627,7 +631,7 @@ mod club_sem_rust {
         #[ink(constructor)]
         pub fn default() -> Self {
             // 864_000_000 es 10 días 
-            Self::new(15, 864_000_000, 5000, 3000, 2000, 3)
+            Self::new(15, 864_000_000, 5, 3, 2, 3)
         }
         
         /// Transfiere la cuenta de un owner a otro pasado por parámetro
@@ -993,18 +997,19 @@ mod club_sem_rust {
             fn new_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
                 let esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 25,
-                    precio_categorias: vec![400, 300, 200],
+                    precio_categorias: vec![4*canon, 3*canon, 2*canon],
                     duracion_deadline: 999,
                     pagos_consecutivos_bono: 10,
                     owner: Some(owner),
                     cuentas_habilitadas: Vec::new(),
                     esta_bloqueado: false
                 };
-                let resultado = ClubSemRust::new(25, 999, 400, 300, 200, 10);
+                let resultado = ClubSemRust::new(25, 999, 4, 3, 2, 10);
                 
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::new(), se esperaba {:?} y se obtuvo {:?}", esperado, resultado)
             }
@@ -1023,11 +1028,12 @@ mod club_sem_rust {
             fn default_test() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
                 let esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 15,
-                    precio_categorias: vec![5000, 3000, 2000],
+                    precio_categorias: vec![5*canon, 3*canon, 2*canon],
                     duracion_deadline: 864_000_000,
                     pagos_consecutivos_bono: 3,
                     owner: Some(owner),
@@ -1128,11 +1134,12 @@ mod club_sem_rust {
             fn set_descuento_test() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
                 let esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 25,
-                    precio_categorias: vec![5000, 3000, 2000],
+                    precio_categorias: vec![5*canon, 3*canon, 2*canon],
                     duracion_deadline: 864_000_000,
                     pagos_consecutivos_bono: 3,
                     owner: Some(owner),
@@ -1173,7 +1180,8 @@ mod club_sem_rust {
                 let owner = accounts.frank;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
                 let now = 5000;
-                let precio_categorias = Vec::from([5000,3000,2000]);
+                let canon = 1_000_000_000_000;
+                let precio_categorias = Vec::from([5*canon,3*canon,2*canon]);
                 ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now);
                 let esperado = ClubSemRust{
                     socios: Vec::from([Socio{
@@ -1215,7 +1223,7 @@ mod club_sem_rust {
                         pagos: Vec::from([Pago::new(now + 864_000_000, 2, None, precio_categorias.clone())]),
                     }]),
                     descuento: 15,
-                    precio_categorias: vec![5000, 3000, 2000],
+                    precio_categorias: precio_categorias.clone(),
                     duracion_deadline: 864_000_000,
                     pagos_consecutivos_bono: 3,
                     owner: Some(owner),
@@ -1243,11 +1251,12 @@ mod club_sem_rust {
             #[ink::test]
             fn registrar_pago_dni_test() {
                 let now = 5000;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
-                let precio_categorias = Vec::from([5000, 3000, 2000]);
+                let precio_categorias = Vec::from([5*canon, 3*canon, 2*canon]);
 
                 let esperado = ClubSemRust{
                     socios: Vec::from([
@@ -1261,7 +1270,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 + now,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: false,
                                     a_tiempo: true,
                                     aplico_descuento: false,
@@ -1270,7 +1279,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 * 2 + now,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: true,
                                     a_tiempo: false,
                                     aplico_descuento: false,
@@ -1288,7 +1297,7 @@ mod club_sem_rust {
                     };
                     let mut resultado = ClubSemRust::default();
                     resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, accounts.django, 3, None);
-                    resultado.registrar_pago_dni(44044044, 2000);
+                    resultado.registrar_pago_dni(44044044, 2*canon);
                     assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago_dni(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
                 }
 
@@ -1374,11 +1383,12 @@ mod club_sem_rust {
             #[ink::test]
             fn registrar_pago_account_test() {
                 let now = 5000;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
-                let precio_categorias = Vec::from([5000, 3000, 2000]);
+                let precio_categorias = Vec::from([5*canon, 3*canon, 2*canon]);
 
                 let esperado = ClubSemRust{
                     socios: Vec::from([
@@ -1392,7 +1402,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 + now,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: false,
                                     a_tiempo: true,
                                     aplico_descuento: false,
@@ -1401,7 +1411,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 * 2 + now * 2,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: true,
                                     a_tiempo: false,
                                     aplico_descuento: false,
@@ -1419,7 +1429,7 @@ mod club_sem_rust {
                     };
                 let mut resultado = ClubSemRust::default();
                 resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, accounts.django, 3, None);
-                resultado.registrar_pago_account(accounts.django, 2000);
+                resultado.registrar_pago_account(accounts.django, 2*canon);
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago_dni(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
                 }
 
@@ -1504,9 +1514,10 @@ mod club_sem_rust {
             fn pagar_test() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let now = 5000;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.frank);
-                let precio_categorias = Vec::from([5000, 3000, 2000]);
+                let precio_categorias = Vec::from([5*canon, 3*canon, 2*canon]);
                 let esperado = ClubSemRust{
                     socios: Vec::from([
                         Socio{
@@ -1519,7 +1530,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 + now,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: false,
                                     a_tiempo: true,
                                     aplico_descuento: false,
@@ -1528,7 +1539,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 * 2 + now * 2,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: false,
                                     a_tiempo: true,
                                     aplico_descuento: false,
@@ -1537,7 +1548,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 * 3 + now * 3,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: false,
                                     a_tiempo: true,
                                     aplico_descuento: false,
@@ -1546,7 +1557,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 * 4 + now * 4,
                                     categoria: Categoria::C,
-                                    monto: 1700,
+                                    monto: 17*(canon/10),
                                     pendiente: false,
                                     a_tiempo: true,
                                     aplico_descuento: true,
@@ -1555,7 +1566,7 @@ mod club_sem_rust {
                                 Pago{
                                     vencimiento: 864_000_000 * 5 + now * 5,
                                     categoria: Categoria::C,
-                                    monto: 2000,
+                                    monto: 2*canon,
                                     pendiente: true,
                                     a_tiempo: false,
                                     aplico_descuento: false,
@@ -1574,11 +1585,11 @@ mod club_sem_rust {
                 let mut resultado = ClubSemRust::default();
                 resultado.registrar_nuevo_socio("Juancito".to_string(), 44044044, accounts.django, 3, None);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.django);
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(2000);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(2*canon);
                 resultado.pagar();
                 resultado.pagar();
                 resultado.pagar();
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(1700);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(17*(canon/10));
                 resultado.pagar();
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_pago_dni(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
             }
@@ -1886,11 +1897,12 @@ mod club_sem_rust {
             fn agregar_cuenta_test() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
+                let canon = 1_000_000_000_000;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
                 let esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 15,
-                    precio_categorias: vec![5000, 3000, 2000],
+                    precio_categorias: vec![5*canon, 3*canon, 2*canon],
                     duracion_deadline: 864_000_000,
                     pagos_consecutivos_bono: 3,
                     owner: Some(owner.clone()),
@@ -1979,13 +1991,14 @@ mod club_sem_rust {
                 
             #[ink::test]
             fn flip_bloqueo_test(){
+                let canon = 1_000_000_000_000;
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
                 let esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 15,
-                    precio_categorias: vec![5000, 3000, 2000],
+                    precio_categorias: vec![5*canon, 3*canon, 2*canon],
                     duracion_deadline: 864_000_000,
                     pagos_consecutivos_bono: 3,
                     owner: Some(owner.clone()),

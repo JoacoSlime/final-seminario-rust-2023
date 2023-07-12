@@ -19,12 +19,7 @@ mod gestor_de_cobros {
 
         #[ink(constructor)]
         #[cfg(not(test))]
-        pub fn new(club_sem_rust_hash: Hash) -> Self {
-            let club_sem_rust =  ClubSemRustRef::default()
-                .code_hash(club_sem_rust_hash)
-                .endowment(0)
-                .salt_bytes([0xFE, 0xAE, 0xDE, 0xAD, 0xCA, 0xFE])
-                .instantiate();
+        pub fn new(club_sem_rust: ClubSemRustRef) -> Self {
             Self {club_sem_rust}
         }
         
@@ -43,7 +38,8 @@ mod gestor_de_cobros {
         fn get_socios(&self) -> Vec<Socio> {
             let deadline = 864_000_000;
             let hoy = 1_690_000_000_000;
-            let precios = Vec::from([5000, 4000, 2000]);
+            let canon = 1_000_000_000_000;
+            let precios = Vec::from([5*canon, 4*canon, 2*canon]);
             let descuento = Some(15);
             let mut a = Socio::new("Alice".to_string(), 44044044, [0;32].into(), 1, None, hoy+deadline, precios.clone());
             let mut b = Socio::new("Bob".to_string(), 45045045, [1;32].into(), 2, Some(6), hoy+deadline, precios.clone());
@@ -53,26 +49,26 @@ mod gestor_de_cobros {
             let mut f = Socio::new("Frank".to_string(), 49049049, [5;32].into(), 3, None, hoy+deadline, precios.clone());
             let g = Socio::new("Gary".to_string(), 50050050, [6;32].into(), 3, None, hoy+deadline, precios.clone());
             
-            a.realizar_pago(descuento, 3, 5000, hoy, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 5000, hoy + 100_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 5000, hoy + 200_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 4250, hoy + 400_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy + 100_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy + 200_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 425*(canon/100), hoy + 400_000, precios.clone(), deadline);
 
-            b.realizar_pago(descuento, 3, 4000, hoy, precios.clone(), deadline);
-            b.realizar_pago(descuento, 3, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
+            b.realizar_pago(descuento, 3, 4*canon, hoy, precios.clone(), deadline);
+            b.realizar_pago(descuento, 3, 4*canon, hoy + deadline + 100_000, precios.clone(), deadline);
 
-            c.realizar_pago(descuento, 3, 4000, hoy, precios.clone(), deadline);
-            c.realizar_pago(descuento, 3, 4000, hoy + 100_000, precios.clone(), deadline);
+            c.realizar_pago(descuento, 3, 4*canon, hoy, precios.clone(), deadline);
+            c.realizar_pago(descuento, 3, 4*canon, hoy + 100_000, precios.clone(), deadline);
 
-            d.realizar_pago(descuento, 3, 5000, hoy, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 5000, hoy + 100_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 5000, hoy + 200_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy + 100_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 425*(canon/100), hoy + deadline + 200_000, precios.clone(), deadline);
 
-            f.realizar_pago(descuento, 3, 2000, hoy, precios.clone(), deadline);
-            f.realizar_pago(descuento, 3, 2000, hoy + 100_000, precios.clone(), deadline);
-            f.realizar_pago(descuento, 3, 2000, hoy + 200_000, precios.clone(), deadline);
-            f.realizar_pago(descuento, 3, 1700, hoy + 300_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 2*canon, hoy, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 2*canon, hoy + 100_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 2*canon, hoy + 200_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 17*(canon/10), hoy + 300_000, precios.clone(), deadline);
 
             let r = Vec::from([a,b,c,d,e,f,g]);
             r
@@ -265,37 +261,39 @@ mod gestor_de_cobros {
 
         #[ink::test]
         fn get_recaudacion_test(){
+            let canon = 1_000_000_000_000;
             let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000; // Saturday, July 22, 2023 4:26:40 AM
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
 
             let gestor = GestorDeCobros::new();
 
-            assert_eq!(gestor.get_recaudacion(7, 2023), 53_950);
+            assert_eq!(gestor.get_recaudacion(7, 2023), 53_950*canon/1000);
         }
 
         #[ink::test]
         fn socios_no_morosos_test() { // Debe extenderse
+            let canon = 1_000_000_000_000;
             let deadline = 864_000_000;
             let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
-            let precios = Vec::from([5000,4000,2000]);
+            let precios = Vec::from([5*canon,4*canon,2*canon]);
             let descuento = Some(15);
             let mut a = Socio::new("Alice".to_string(), 44044044, [0;32].into(), 1, None, hoy+deadline, precios.clone());
             let mut c = Socio::new("Carol".to_string(), 46046046, [2;32].into(), 2, Some(1), hoy+deadline, precios.clone());
             let mut d = Socio::new("Derek".to_string(), 47047047, [3;32].into(), 1, None, hoy+deadline, precios.clone());
             let e = Socio::new("Emily".to_string(), 48048048, [4;32].into(), 1, None, hoy+deadline, precios.clone());
             
-            a.realizar_pago(descuento, 3, 5000, hoy, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 5000, hoy + 100_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 5000, hoy + 200_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 4250, hoy + 400_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy + 100_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy + 200_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 425*canon/100, hoy + 400_000, precios.clone(), deadline);
 
-            c.realizar_pago(descuento, 3, 4000, hoy, precios.clone(), deadline);
-            c.realizar_pago(descuento, 3, 4000, hoy + 100_000, precios.clone(), deadline);
+            c.realizar_pago(descuento, 3, 4*canon, hoy, precios.clone(), deadline);
+            c.realizar_pago(descuento, 3, 4*canon, hoy + 100_000, precios.clone(), deadline);
 
-            d.realizar_pago(descuento, 3, 5000, hoy, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 5000, hoy + 100_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 5000, hoy + 200_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy + 100_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 425*canon/100, hoy + deadline + 200_000, precios.clone(), deadline);
 
             let esperado: Vec<Socio> = Vec::from([a,c,d,e]);
             let gestor = GestorDeCobros::new();
@@ -306,10 +304,11 @@ mod gestor_de_cobros {
 
         #[ink::test]
         fn socios_morosos_test() {
+            let canon = 1_000_000_000_000;
             let hoy: crate::gestor_de_cobros::Timestamp = 1_690_000_000_000;
             let deadline = 864_000_000;
 
-            let precios = Vec::from([5000, 4000, 2000]);
+            let precios = Vec::from([5*canon, 4*canon, 2*canon]);
             let descuento = Some(15);
             let mut a = Socio::new("Alice".to_string(), 44044044, [0;32].into(), 1, None, hoy+deadline, precios.clone());
             let mut b = Socio::new("Bob".to_string(), 45045045, [1;32].into(), 2, Some(6), hoy+deadline, precios.clone());
@@ -319,26 +318,26 @@ mod gestor_de_cobros {
             let mut f = Socio::new("Frank".to_string(), 49049049, [5;32].into(), 3, None, hoy+deadline, precios.clone());
             let g = Socio::new("Gary".to_string(), 50050050, [6;32].into(), 3, None, hoy+deadline, precios.clone());
             
-            a.realizar_pago(descuento, 3, 5000, hoy, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 5000, hoy + 100_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 5000, hoy + 200_000, precios.clone(), deadline);
-            a.realizar_pago(descuento, 3, 4250, hoy + 400_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy + 100_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 5*canon, hoy + 200_000, precios.clone(), deadline);
+            a.realizar_pago(descuento, 3, 425*canon/100, hoy + 400_000, precios.clone(), deadline);
 
-            b.realizar_pago(descuento, 3, 4000, hoy, precios.clone(), deadline);
-            b.realizar_pago(descuento, 3, 4000, hoy + deadline + 100_000, precios.clone(), deadline);
+            b.realizar_pago(descuento, 3, 4*canon, hoy, precios.clone(), deadline);
+            b.realizar_pago(descuento, 3, 4*canon, hoy + deadline + 100_000, precios.clone(), deadline);
 
-            c.realizar_pago(descuento, 3, 4000, hoy, precios.clone(), deadline);
-            c.realizar_pago(descuento, 3, 4000, hoy + 100_000, precios.clone(), deadline);
+            c.realizar_pago(descuento, 3, 4*canon, hoy, precios.clone(), deadline);
+            c.realizar_pago(descuento, 3, 4*canon, hoy + 100_000, precios.clone(), deadline);
 
-            d.realizar_pago(descuento, 3, 5000, hoy, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 5000, hoy + 100_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 5000, hoy + 200_000, precios.clone(), deadline);
-            d.realizar_pago(descuento, 3, 4250, hoy + deadline + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy + 100_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 5*canon, hoy + 200_000, precios.clone(), deadline);
+            d.realizar_pago(descuento, 3, 425*canon/100, hoy + deadline + 200_000, precios.clone(), deadline);
 
-            f.realizar_pago(descuento, 3, 2000, hoy, precios.clone(), deadline);
-            f.realizar_pago(descuento, 3, 2000, hoy + 100_000, precios.clone(), deadline);
-            f.realizar_pago(descuento, 3, 2000, hoy + 200_000, precios.clone(), deadline);
-            f.realizar_pago(descuento, 3, 1700, hoy + 300_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 2*canon, hoy, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 2*canon, hoy + 100_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 2*canon, hoy + 200_000, precios.clone(), deadline);
+            f.realizar_pago(descuento, 3, 17*canon/10, hoy + 300_000, precios.clone(), deadline);
 
             ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(hoy);
             let esperado: Vec<Socio> = Vec::new();
