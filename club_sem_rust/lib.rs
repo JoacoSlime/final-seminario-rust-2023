@@ -2320,27 +2320,50 @@ mod club_sem_rust {
                 assert_eq!(socio1.es_moroso(en30dias), false);
             }
     
-            #[ink::test]
+             #[ink::test]
             fn cambiar_categoria_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
                 let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
                 socio1.cambiar_categoria(3, None);
+                assert_eq!(socio1.id_categoria, 3);
                 socio1.cambiar_categoria(1, None);
+                assert_eq!(socio1.id_categoria, 1);
                 socio1.cambiar_categoria(2, Some(5));
+                assert_eq!(socio1.id_categoria, 2);
+                
             }
             #[ink::test]
-            #[should_panic]
-            fn cambiar_categoria_test_panic(){
+            #[should_panic(expected = "Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8")]
+            fn cambiar_categoria_test_panic_first(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
-                socio1.cambiar_categoria(3, Some(4));
-                socio1.cambiar_categoria(1, Some(3));
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
                 socio1.cambiar_categoria(2, Some(2));
             }
+
+            #[ink::test]
+            #[should_panic(expected = "Si se desea cambiar a Categoria B, se debe elegir un deporte")]
+            fn cambiar_categoria_test_panic_second(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
+                socio1.cambiar_categoria(2, None);
+            }
+
+            #[ink::test]
+            #[should_panic(expected = "Si se desea cambiar a Categoria A o C, no se debe elegir un deporte")]
+            fn cambiar_categoria_test_panic_third(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
+                socio1.cambiar_categoria(3, Some(3));
+            }
+
             #[ink::test]
             fn get_mi_deporte_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
