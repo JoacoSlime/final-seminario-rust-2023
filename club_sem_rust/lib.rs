@@ -2275,7 +2275,7 @@ mod club_sem_rust {
                 let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 2, Some(2), en30dias, precios_categorias.clone() );
             
              }
-            #[ink::test]
+           #[ink::test]
             fn puede_hacer_deporte_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
     
@@ -2285,26 +2285,28 @@ mod club_sem_rust {
                 let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
                 let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias );
     
-                assert_eq!(socio1.puede_hacer_deporte(3), true);
-                assert_ne!(socio1.puede_hacer_deporte(2), true);
+                assert_eq!(socio1.puede_hacer_deporte(3), false);
+                assert_eq!(socio1.puede_hacer_deporte(2), true);
                 for i in 1..9{
                     assert_ne!(socio2.puede_hacer_deporte(i), true);
-                    assert_eq!(socio3.puede_hacer_deporte(i), true);
                 } 
+                assert_eq!(socio3.puede_hacer_deporte(2), true);
+                assert_eq!(socio3.puede_hacer_deporte(1), false);
+                assert_eq!(socio3.puede_hacer_deporte(3), false);
+
     
             }
             #[ink::test]
-            #[should_panic]
+            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn puede_hacer_deporte_test_panic(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.alice, 1, None, en30dias, precios_categorias );
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.alice, 5, None, en30dias, precios_categorias );
                 for i in 1..9{
                     assert_ne!(socio2.puede_hacer_deporte(i), true);
                 }
             }
-    
             #[ink::test]
             fn generar_recibos_y_realizar_pago_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
