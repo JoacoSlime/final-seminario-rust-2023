@@ -33,7 +33,10 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// Puede devolver panic sino se corresponde el id_deporte con la categoria.
+        /// - Puede devolver panic sino se corresponde el id_deporte con la categoria:
+        ///     - Categoría B, con deporte None.
+        ///     - Categoria A y C, con deporte Some.
+        ///     - Categoria B con deporte igual a 2 o fuera de rango.
         pub fn new(nombre: String, dni:u32, account: AccountId, id_categoria: u32, id_deporte: Option<u32>, vencimiento:Timestamp, precio_categorias: Vec<u128>) -> Socio {
             if id_categoria == 2 && id_deporte == None{
                 panic!("Categoria B debe elegir un deporte");
@@ -41,8 +44,8 @@ mod club_sem_rust {
                 if (id_categoria == 1 || id_categoria == 3) && id_deporte != None{ // Agregar a los tests - J
                     panic!("Categoria A y Categoria C no deben elegir un deporte  -- Este campo debe permanecer vacio");
                 }else{
-                    if id_categoria == 2 && id_deporte == Some(2){
-                        panic!("Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8");
+                    if (id_categoria == 2) && ((id_deporte == Some(2)) || (id_deporte < Some(1)) || (id_deporte > Some(8))) { 
+                        panic!("Categoria B debe elegir un deporte distinto a Gimnasio(id=2) y dentro del rango 1 a 8");
                     }else{
                         let pago_inicial:Vec<Pago> = Vec::from([Pago::new(vencimiento, id_categoria, None, precio_categorias)]);
                         Socio {
@@ -64,9 +67,10 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// Puede devolver panic si el id_categoría del Socio está fuera de rango.
+        /// - Si el id_categoría del Socio está fuera de rango.
         ///
         /// # Ejemplo
+        /// 
         /// ```
         /// let account = [0; 32];
         /// use crate::club_sem_rust::Socio;
@@ -100,8 +104,8 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// Devuelve panic si el pago no presenta una fecha,
-        /// si el socio no tiene ningún Pago registrado.
+        /// - Si el pago no presenta una fecha.
+        /// - Si el socio no tiene ningún Pago registrado.
         pub fn generar_recibos(&self) -> Vec<Recibo> {
             let mut recibos = Vec::new();
             if self.pagos.is_empty() {
@@ -127,7 +131,7 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// El método puede devolver panic en caso de que el socio no tenga pagos registrados.
+        /// - Si el socio no tiene pagos registrados.
         pub fn es_moroso(&self, current_time:Timestamp) -> bool {
             if let Some(ultimo_pago) = self.pagos.last(){
                 return ultimo_pago.es_moroso(current_time);
@@ -143,7 +147,7 @@ mod club_sem_rust {
         /// 
         /// # Panics
         /// 
-        /// Este método puede dar panic en caso de que el socio no tenga pagos registrados.
+        /// - Si el socio no tiene pagos registrados.
         pub fn realizar_pago(&mut self, descuento: Option<u128>, pagos_consecutivos: u32, monto: u128, fecha: Timestamp, precio_categorias: Vec<u128>, deadline:Timestamp){
             if let Some(i) = self.pagos.iter().position(|p| p.pendiente){
                 self.pagos[i].realizar_pago(monto, fecha);
@@ -371,6 +375,7 @@ mod club_sem_rust {
         /// Un pago se considera "moroso" en caso de que esté vencido e impago.
         /// 
         /// # Ejemplo
+        /// 
         /// ```
         /// use crate::club_sem_rust::Pago;
         /// 
@@ -388,9 +393,11 @@ mod club_sem_rust {
         /// 
         /// # Panics
         /// 
-        /// Puede llegar a dar panic si el pago no está pendiente, o el monto pagado es diferente al monto a pagar.
+        /// - Si el pago no está pendiente.
+        /// - Si el monto pagado es diferente al monto a pagar.
         /// 
         /// # Ejemplo
+        /// 
         /// ```
         /// use crate::club_sem_rust::Pago;
         /// 
@@ -430,7 +437,7 @@ mod club_sem_rust {
         /// 
         /// # Panics
         /// 
-        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido.
+        /// - Si el ID ingresado está por fuera del rango establecido.
         pub fn new(id_categoria:u32) -> Categoria {
             match id_categoria {
                 1 => Self::A,
@@ -444,7 +451,7 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// Puede devolver panic si el ID ingresado está por fuera del rango establecido.
+        /// - Si el ID ingresado está por fuera del rango establecido.
         pub fn match_categoria(id_categoria: u32) -> Self {
             match id_categoria {
                 1 => Self::A,
@@ -465,7 +472,7 @@ mod club_sem_rust {
         /// 
         /// # Panic
         /// 
-        /// Puede devolver panic si se envia por parámetro un id_deporte = None siendo la Categoría actual Categoría B
+        /// - Si se envia por parámetro un id_deporte = None siendo la Categoría actual Categoría B
         pub fn get_deporte(&self, id_deporte: Option<u32>) -> Option<Vec<Deporte>> {
             match self {
                 Self::A => Some(Deporte::get_deportes()),
@@ -602,7 +609,7 @@ mod club_sem_rust {
         /// Crea un nuevo club en base a los parámetros dados
         /// 
         /// # Panics:
-        /// Puede dar panic si el descuento es mayor a 100
+        /// - Si el descuento es mayor a 100
         #[ink(constructor)]
         pub fn new(descuento: u128, duracion_deadline: Timestamp, precio_categoria_a: u128, precio_categoria_b: u128, precio_categoria_c: u128, pagos_consecutivos_bono: u32) -> Self {
             if descuento > 100 {
@@ -637,7 +644,7 @@ mod club_sem_rust {
         /// Transfiere la cuenta de un owner a otro pasado por parámetro
         /// 
         /// # Panics
-        /// Puede llegar a dar panic si el caller no es el owner
+        /// - Si el caller no es el owner
         #[ink(message)]
         pub fn transfer_account(&mut self, new_owner:Option<AccountId>){
             let caller = self.env().caller();
@@ -823,9 +830,9 @@ mod club_sem_rust {
         /// 
         /// # Panics:
         /// 
-        /// - En caso de que el usuario no esté registrado.
-        /// - En caso de que el pago ya estuviera registrado.
-        /// - En caso de que haya un descuento que cause tokens con punto fijo. ("Monto incorrecto.")
+        /// - Si el usuario no está registrado.
+        /// - Si el pago ya estuviera registrado.
+        /// - Si hubiera un descuento que cause tokens con punto fijo. ("Monto incorrecto.")
         #[ink(message, payable)]
         pub fn pagar(&mut self) {
             let monto: Balance = self.env().transferred_value();
@@ -837,8 +844,8 @@ mod club_sem_rust {
         /// 
         /// # Panics
         /// 
-        /// - Falla si no tiene suficiente dinero.
-        /// - Falla si el caller no está habilitado.
+        /// - Si no tiene suficiente dinero.
+        /// - Si el caller no está habilitado.
         #[ink(message)]
         pub fn withdraw_this(&mut self, valor: Balance) {
             if self.esta_habilitada(self.env().caller()){
@@ -869,7 +876,7 @@ mod club_sem_rust {
         /// Devuelve un Vector de todos los recibos generados.
         /// 
         /// # Panics
-        /// Puede dar panic si el socio no existe.
+        /// - Si el socio no existe.
         #[ink(message)]
         pub fn get_recibos(&self, dni: u32) -> Vec<Recibo> {
             if let Some(socio) = self.socios.iter().find(|s| s.dni == dni){
@@ -885,9 +892,9 @@ mod club_sem_rust {
         /// # Panics
         /// 
         /// Puede ocurrir un panic en caso de que:
-        /// - No sea owner el caller.
-        /// - No haya owner.
-        /// - Ya exista la cuenta.
+        /// - Si el caller no sea owner.
+        /// - Si no hay owner.
+        /// - Si ya existiera la cuenta.
         #[ink(message)]
         pub fn agregar_cuenta(&mut self, id: AccountId) {
             match self.owner{
@@ -906,14 +913,14 @@ mod club_sem_rust {
             }
         }
                 
-        /// Agrega una cuenta al vector de cuentas habilitadas.
+        /// Quita una cuenta del vector de cuentas habilitadas.
         /// 
         /// # Panics
         /// 
         /// Puede ocurrir un panic en caso de que:
-        /// - No sea owner el caller.
-        /// - No haya owner.
-        /// - No exista la cuenta
+        /// - Si el caller no sea owner.
+        /// - Si no hay owner.
+        /// - Si no existiera la cuenta.
         #[ink(message)]
         pub fn quitar_cuenta(&mut self, id: AccountId) {
             match self.owner{
@@ -2590,7 +2597,7 @@ mod club_sem_rust {
             }
 
             #[ink::test]
-            #[should_panic(expected = "Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8")]
+            #[should_panic(expected = "Categoria B debe elegir un deporte distinto a Gimnasio(id=2) y dentro del rango 1 a 8")]
             fn new_socio_test_panic_third(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;

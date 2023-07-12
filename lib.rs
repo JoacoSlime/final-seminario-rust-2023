@@ -17,24 +17,28 @@ mod gestor_de_cobros {
 
     impl GestorDeCobros {
 
+        /// Genera un nuevo contrato GestorDeCobros.
+        /// Toma como parámetro de entrada una refencia a un contrato de ClubSemRust.
         #[ink(constructor)]
         #[cfg(not(test))]
         pub fn new(club_sem_rust: ClubSemRustRef) -> Self {
             Self {club_sem_rust}
         }
         
+        /// Recibe del contrato de ClubSemRust la lista de socios actual.
         #[cfg(not(test))]
         fn get_socios(&self) -> Vec<Socio> {
             self.club_sem_rust.get_socios()
         }
         
+        /// Método mockeado para testing.
         #[cfg(test)]
         pub fn new() -> Self {
             Self{}
         }
 
+        /// Método mockeado para testing.
         #[cfg(test)]
-        /// Método mockeado para get_socios()
         fn get_socios(&self) -> Vec<Socio> {
             let deadline = 864_000_000;
             let hoy = 1_690_000_000_000;
