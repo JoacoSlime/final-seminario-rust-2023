@@ -2237,7 +2237,7 @@ mod club_sem_rust {
         mod socio_tests {
             use super::*;
             
-            #[ink::test]
+             #[ink::test]
             fn new_socio_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
@@ -2245,18 +2245,36 @@ mod club_sem_rust {
                 let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
                 let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
                 let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias );
+                assert_eq!(socio1.nombre, "Luis".to_string());
+                assert_eq!(socio1.dni, 2345);
             }
             #[ink::test]
-            #[should_panic]
-            fn new_socio_test_panic(){
+            #[should_panic(expected = "Categoria B debe elegir un deporte")]
+            fn new_socio_test_panic_first(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 2, None, en30dias, precios_categorias.clone() );
+            }
+            #[ink::test]
+            #[should_panic(expected = "Categoria A y Categoria C no deben elegir un deporte  -- Este campo debe permanecer vacio")] 
+            fn new_socio_test_panic_second(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, Some(3), en30dias, precios_categorias.clone() );
-                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 2, None, en30dias, precios_categorias.clone() );
                 let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, Some(4), en30dias, precios_categorias );
+            
             }
-    
+            #[ink::test]
+            #[should_panic(expected = "Categoria B debe elegir un deporte distinto a Gimnasio(id=2). Intente con id_deporte 1, 3, 4, 5, 6, 7, u 8")]
+             fn new_socio_test_panic_third(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 2, Some(2), en30dias, precios_categorias.clone() );
+            
+             }
             #[ink::test]
             fn puede_hacer_deporte_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
