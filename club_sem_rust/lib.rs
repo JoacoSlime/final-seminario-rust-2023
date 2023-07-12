@@ -739,8 +739,12 @@ mod club_sem_rust {
             if self.esta_habilitada(self.env().caller()){
                 let hoy = self.env().block_timestamp().checked_add(self.duracion_deadline).expect("Overflow en la suma de tiempo");
                 let precios = self.precio_categorias.clone();
-                let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, hoy, precios);
-                self.socios.push(socio);
+                if id_deporte == Some(2) || id_deporte < Some(1) || id_deporte > Some(8) {
+                    panic!("El ID de deporte ingresado es inválido");
+                }else{
+                    let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, hoy, precios);
+                    self.socios.push(socio);
+                }
             }else{
                 panic!("No está habilitado para realizar esta operación.")
             }
