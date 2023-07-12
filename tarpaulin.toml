@@ -1,0 +1,8 @@
+[all]
+verbose = true
+debug = false
+workspace = true
+target-dir = "src/coverage"
+skip-clean = true
+exclude-files = ["target/*", "club_sem_rust/*"]
+out = ["Html"]

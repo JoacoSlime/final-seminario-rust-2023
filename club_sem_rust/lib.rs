@@ -160,9 +160,10 @@ mod club_sem_rust {
 	    /// Consulta los pagos mas recientes del Socio y devuelve true si cumple los requisitos para la bonificación.
         ///
         /// Recibe por parametro la cantidad de pagos consecutivos que deben figurar como pagados "a tiempo" para aplicar la bonificacion.
-        /// cumple_bonificacion funciona como un short-circuit. Al encontrar un pago que no cumple devuelve false y termina su ejecución.
+        /// cumple_bonificacion funciona como un short-circuit. Al encontrar un pago que no cumple, o al ser los pagos_consecutivos 0,
+        /// devuelve false y termina su ejecución.
         pub fn cumple_bonificacion(&self, pagos_consecutivos: u32) -> bool {
-            if self.pagos.len() < pagos_consecutivos as usize {
+            if self.pagos.len() < pagos_consecutivos as usize || pagos_consecutivos == 0 {
                 return false
             }else{
                 let m = self.pagos.len().checked_sub(pagos_consecutivos as usize).expect("Error al restar los pagos_consecutivos.");
@@ -581,7 +582,7 @@ mod club_sem_rust {
     /// - El porcentaje de descuentos.
     /// - Los precios de cada categoría.
     /// - El tiempo máximo para verificar exitosamente un pago.
-    /// - La cantidad de pagos consecutivos necesarios para dar un descuento.
+    /// - La cantidad de pagos consecutivos necesarios para dar un descuento. (0 = desactivado)
     /// - El ID de las cuentas habilitadas a usar métodos que hacen escrituras.
     /// - Un boolean que indica si el archivo está bloqueado
     #[ink(storage)]
@@ -1623,6 +1624,17 @@ mod club_sem_rust {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
                 club.withdraw_this(80);
             }
+
+            #[ink::test]
+            fn get_balance_test() {
+                let contract_balance = 100;
+                let contract_id = ink::env::test::callee::<ink::env::DefaultEnvironment>();
+
+                ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(contract_id, contract_balance);
+                
+                let club = ClubSemRust::default();
+                assert_eq!(club.get_balance(), 100);
+            }
                 
             #[ink::test]
             fn get_socios_test() {
@@ -2310,7 +2322,7 @@ mod club_sem_rust {
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
                 let socio2 = Socio::new("Juana".to_string(), 23245, accounts.bob, 1, None, en30dias, precios_categorias.clone() );
-                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias );
+                let socio3 = Socio::new("Carlos".to_string(), 23445, accounts.charlie, 3, None, en30dias, precios_categorias.clone() );
     
                 assert!(socio1.puede_hacer_deporte(3));
                 assert!(socio1.puede_hacer_deporte(2));
@@ -2320,34 +2332,73 @@ mod club_sem_rust {
                 assert!(socio3.puede_hacer_deporte(2));
                 assert!(!socio3.puede_hacer_deporte(1));
                 assert!(!socio3.puede_hacer_deporte(3));
+
+                let mut socio4 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(1), en30dias, precios_categorias);
+                socio4.id_deporte = None;
+                assert!(!socio4.puede_hacer_deporte(0));
             }
 
             #[ink::test]
             #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
             fn puede_hacer_deporte_test_panic(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
-                let precios_categorias = Vec::from([5000, 3000, 2000]);
-                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let socio2 = Socio::new("Juana".to_string(), 23245, accounts.alice, 5, None, en30dias, precios_categorias );
-                socio2.puede_hacer_deporte(2);
+                let socio = Socio{
+                    id_deporte: Some(3),
+                    id_categoria: 0,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: "Alicia".to_string(),
+                    pagos: Vec::new(),
+                };
+                socio.puede_hacer_deporte(2);
             }
 
             #[ink::test]
-            fn es_moroso_test(){
+            fn generar_recibos() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
-                assert!(!socio1.es_moroso(500));
-                socio1.realizar_pago(None, 3, 3000, en30dias, precios_categorias, en30dias );
-                assert!(socio1.es_moroso(en30dias*2+1));
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias+1, precios_categorias.clone() );
+
+                socio.realizar_pago(Some(15), 3, 3000, en30dias, precios_categorias.clone(), 0);
+                socio.realizar_pago(Some(15), 3, 3000, en30dias, precios_categorias.clone(), 0);
+                socio.realizar_pago(Some(15), 3, 3000, en30dias, precios_categorias.clone(), 0);
+                socio.realizar_pago(Some(15), 3, 2550, en30dias, precios_categorias.clone(), 0);
+
+                let esperado = Vec::from([Recibo{
+                    nombre: "Luis".to_string(),
+                    dni: 2345,
+                    monto: 3000,
+                    categoria: Categoria::B,
+                    fecha: en30dias
+                }, Recibo {
+                    nombre: "Luis".to_string(),
+                    dni: 2345,
+                    monto: 3000,
+                    categoria: Categoria::B,
+                    fecha: en30dias
+                }, Recibo {
+                    nombre: "Luis".to_string(),
+                    dni: 2345,
+                    monto: 3000,
+                    categoria: Categoria::B,
+                    fecha: en30dias
+                }, Recibo {
+                    nombre: "Luis".to_string(),
+                    dni: 2345,
+                    monto: 2550,
+                    categoria: Categoria::B,
+                    fecha: en30dias
+                }]);
+                let resultado = socio.generar_recibos();
+                assert_eq!(esperado, resultado);
             }
 
             #[ink::test]
             #[should_panic(expected = "Este socio no tiene ningún Pago registrado")]
             fn generar_recibos_panic_first(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
-                let socio1 = Socio{
+                let socio = Socio{
                     id_deporte: Some(3),
                     id_categoria: 3,
                     dni: 5432,
@@ -2355,14 +2406,14 @@ mod club_sem_rust {
                     nombre: "Alicia".to_string(),
                     pagos: Vec::new(),
                 };
-                socio1.generar_recibos();
+                socio.generar_recibos();
             }
 
             #[ink::test]
             #[should_panic(expected = "Este Socio registra un Pago sin fecha")]
             fn generar_recibos_panic_second(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
-                let mut socio1 = Socio{
+                let mut socio = Socio{
                     id_deporte: Some(3),
                     id_categoria: 3,
                     dni: 5432,
@@ -2379,22 +2430,144 @@ mod club_sem_rust {
                     aplico_descuento: false,
                     fecha_pago: None
                 };
-                socio1.pagos.push(un_pago);
-                socio1.generar_recibos();
+                socio.pagos.push(un_pago);
+                socio.generar_recibos();
             }
-		
+
+            #[ink::test]
+            fn es_moroso_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                assert!(!socio.es_moroso(500));
+                socio.realizar_pago(None, 3, 3000, en30dias, precios_categorias, en30dias );
+                assert!(socio.es_moroso(en30dias*2+1));
+            }
+            
+            #[ink::test]
+            #[should_panic(expected = "Este socio no tiene ningún pago registrado")]
+            fn es_moroso_panic_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let socio = Socio{
+                    id_deporte: Some(3),
+                    id_categoria: 3,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: "Alicia".to_string(),
+                    pagos: Vec::new(),
+                };
+                socio.es_moroso(0);
+            }
+
+            #[ink::test]
+            fn realizar_pago_test() {
+                let now = 5000;
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let deadline = 20000;
+                ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(now); 
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let esperado = Socio{
+                    id_deporte: None,
+                    id_categoria: 1,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: "Alicia".to_string(),
+                    pagos: Vec::from([Pago {
+                        vencimiento: deadline,
+                        categoria: Categoria::A,
+                        monto: 5000,
+                        pendiente: false,
+                        a_tiempo: true,
+                        aplico_descuento: false,
+                        fecha_pago: Some(now)
+                    }, Pago {
+                        vencimiento: deadline*2,
+                        categoria: Categoria::A,
+                        monto: 5000,
+                        pendiente: false,
+                        a_tiempo: true,
+                        aplico_descuento: false,
+                        fecha_pago: Some(now)
+                    }, Pago {
+                        vencimiento: deadline*3,
+                        categoria: Categoria::A,
+                        monto: 5000,
+                        pendiente: false,
+                        a_tiempo: true,
+                        aplico_descuento: false,
+                        fecha_pago: Some(now)
+                    }, Pago {
+                        vencimiento: deadline*4,
+                        categoria: Categoria::A,
+                        monto: 4250,
+                        pendiente: false,
+                        a_tiempo: true,
+                        aplico_descuento: true,
+                        fecha_pago: Some(now)
+                    }, Pago {
+                        vencimiento: deadline*5,
+                        categoria: Categoria::A,
+                        monto: 5000,
+                        pendiente: true,
+                        a_tiempo: false,
+                        aplico_descuento: false,
+                        fecha_pago: None
+                    }]),
+                };
+                
+                let mut resultado = Socio::new("Alicia".to_string(), 5432, accounts.alice, 1, None, deadline, precios_categorias.clone());
+                resultado.realizar_pago(Some(15), 3, 5000, now, precios_categorias.clone(), deadline);
+                resultado.realizar_pago(Some(15), 3, 5000, now, precios_categorias.clone(), deadline);
+                resultado.realizar_pago(Some(15), 3, 5000, now, precios_categorias.clone(), deadline);
+                resultado.realizar_pago(Some(15), 3, 4250, now, precios_categorias.clone(), deadline);
+                assert_eq!(esperado, resultado);
+            }
+
+            #[ink::test]
+            #[should_panic(expected = "Este socio no tiene ningún Pago registrado")]
+            fn realizar_pago_test_panic() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let mut socio = Socio{
+                    id_deporte: Some(3),
+                    id_categoria: 3,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: "Alicia".to_string(),
+                    pagos: Vec::new(),
+                };
+                socio.realizar_pago(None, 0, 0, 0, precios_categorias, 0);
+            }
+
+            #[ink::test]
+            fn cumple_bonificacion_test() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let precios_categorias = Vec::from([5000, 3000, 2000]);
+                let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias.clone() );
+                assert!(!socio.cumple_bonificacion(3));
+                socio.realizar_pago(Some(15), 3, 3000, 0, precios_categorias.clone(), 1);
+                assert!(!socio.cumple_bonificacion(3));
+                socio.realizar_pago(Some(15), 3, 3000, 0, precios_categorias.clone(), 1);
+                assert!(!socio.cumple_bonificacion(3));
+                socio.pagos.iter_mut().last().unwrap().a_tiempo=true; // Un pago solo está a tiempo si no está pendiente.
+                assert!(socio.cumple_bonificacion(3));
+                assert!(!socio.cumple_bonificacion(0));
+            }
+
             #[ink::test]
             fn cambiar_categoria_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
-                socio1.cambiar_categoria(3, None);
-                assert_eq!(socio1.id_categoria, 3);
-                socio1.cambiar_categoria(1, None);
-                assert_eq!(socio1.id_categoria, 1);
-                socio1.cambiar_categoria(2, Some(5));
-                assert_eq!(socio1.id_categoria, 2);
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                socio.cambiar_categoria(3, None);
+                assert_eq!(socio.id_categoria, 3);
+                socio.cambiar_categoria(1, None);
+                assert_eq!(socio.id_categoria, 1);
+                socio.cambiar_categoria(2, Some(5));
+                assert_eq!(socio.id_categoria, 2);
             }
 
             #[ink::test]
@@ -2403,8 +2576,8 @@ mod club_sem_rust {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
-                socio1.cambiar_categoria(2, Some(2));
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
+                socio.cambiar_categoria(2, Some(2));
             }
 
             #[ink::test]
@@ -2413,8 +2586,8 @@ mod club_sem_rust {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
-                socio1.cambiar_categoria(2, None);
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
+                socio.cambiar_categoria(2, None);
             }
 
             #[ink::test]
@@ -2423,8 +2596,8 @@ mod club_sem_rust {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
-                socio1.cambiar_categoria(3, Some(3));
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 1, None, en30dias, precios_categorias );
+                socio.cambiar_categoria(3, Some(3));
             }
 
             #[ink::test]
@@ -2432,25 +2605,40 @@ mod club_sem_rust {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let mut socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
-                let resultado = socio1.get_mi_deporte();
+                let mut socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                let resultado = socio.get_mi_deporte();
                 let esperado = Some(Vec::from([Deporte::Basquet]));
                 assert_eq!(resultado, esperado);
 
-                socio1.cambiar_categoria(3, None);
-                let resultado = socio1.get_mi_deporte();
+                socio.cambiar_categoria(3, None);
+                let resultado = socio.get_mi_deporte();
                 let esperado = None;
                 assert_eq!(resultado, esperado);
 
-                socio1.cambiar_categoria(1, None);
-                let resultado = socio1.get_mi_deporte();
+                socio.cambiar_categoria(1, None);
+                let resultado = socio.get_mi_deporte();
                 let esperado = Some(Deporte::get_deportes());
                 assert_eq!(resultado, esperado);
 
-                socio1.cambiar_categoria(2, Some(5));
-                let resultado = socio1.get_mi_deporte();
+                socio.cambiar_categoria(2, Some(5));
+                let resultado = socio.get_mi_deporte();
                 let esperado = Some(Vec::from([Deporte::Hockey]));
                 assert_eq!(resultado, esperado);
+            }
+
+            #[ink::test]
+            #[should_panic(expected = "ID de categoría inválido, por favor revise el socio.")]
+            fn get_mi_deporte_test_panic () {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let socio = Socio{
+                    id_deporte: Some(3),
+                    id_categoria: 0,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: "Alicia".to_string(),
+                    pagos: Vec::new(),
+                };
+                socio.get_mi_deporte();
             }
     
             #[ink::test]
@@ -2458,9 +2646,9 @@ mod club_sem_rust {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let precios_categorias = Vec::from([5000, 3000, 2000]);
                 let en30dias = 864_000_000 + 864_000_000 + 864_000_000;
-                let socio1 = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
-                assert!(socio1.mi_categoria(2));
-                assert!(!socio1.mi_categoria(3));
+                let socio = Socio::new("Luis".to_string(), 2345, accounts.alice, 2, Some(3), en30dias, precios_categorias );
+                assert!(socio.mi_categoria(2));
+                assert!(!socio.mi_categoria(3));
             }
         
         }
