@@ -396,7 +396,7 @@ mod club_sem_rust {
         /// 
         /// let precios = Vec::from([5000,4000,2000]);
         /// let mut pago = Pago::new(u64::default(), 1, None, precios);
-        /// pago.realizar_pago(None, 5000, u64::default());
+        /// pago.realizar_pago(5000, u64::default());
         /// ```
         pub fn realizar_pago(&mut self, monto: u128, fecha: Timestamp) {
             if !self.pendiente {
