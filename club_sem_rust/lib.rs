@@ -1039,6 +1039,53 @@ mod club_sem_rust {
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::default(), se esperaba {:?} y se recibió {:?}", esperado, resultado)
             }
 
+              #[ink::test]
+            fn set_precio_categoria_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let esperado = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 25,
+                    precio_categorias: vec![400, 300, 200],
+                    duracion_deadline: 999,
+                    pagos_consecutivos_bono: 10,
+                    owner: Some(owner),
+                    cuentas_habilitadas: Vec::new(),
+                    esta_bloqueado: false
+                };
+                let mut resultado = ClubSemRust::new(25, 999, 400, 300, 200, 10);
+                resultado.set_precio_categoria(10000, 2);
+                assert_eq!(resultado.precio_categorias[1], 10000);
+                resultado.set_precio_categoria(20000, 3);
+                assert_eq!(resultado.precio_categoria[2], 20000);
+                resultado.set_precio_categoria(1, 50000);
+                assert_eq!(resultado.precio_categoria[0], 5000);
+
+            }
+
+            #[ink::test]
+            #[should_panic(expected = "SE INGRESÓ MAL LA CATEGORIA!!")]
+
+            fn set_precio_categoria_test_panic_first(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let esperado = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 25,
+                    precio_categorias: vec![400, 300, 200],
+                    duracion_deadline: 999,
+                    pagos_consecutivos_bono: 10,
+                    owner: Some(owner),
+                    cuentas_habilitadas: Vec::new(),
+                    esta_bloqueado: false
+                };
+                let mut resultado = ClubSemRust::new(25, 999, 400, 300, 200, 10);
+                resultado.set_precio_categoria(10000, 5);
+                assert_eq!(resultado.precio_categorias[5], 10000);
+            }
+		
             #[ink::test]
             fn get_duracion_deadline_test() {
                 let esperado = 864_000_000;
