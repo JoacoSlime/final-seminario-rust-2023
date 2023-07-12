@@ -2319,7 +2319,39 @@ mod club_sem_rust {
                 let recibos = socio1.generar_recibos();
                 assert_eq!(socio1.es_moroso(en30dias), false);
             }
-    
+
+               #[ink::test]
+            #[should_panic(expected = "Este socio no tiene ningún Pago registrado")]
+            fn generar_recibos_panic_first(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let socio1 = Socio{
+                    id_deporte: Some(3),
+                    id_categoria: 3,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: Alicia,
+                    pagos: Vec::new(),
+                };
+                socio1.generar_recibos();
+            }
+
+            #[ink::test]
+            #[should_panic(expected = "Este Socio registra un Pago sin fecha")]
+            fn generar_recibos_panic_second(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let mut socio1 = Socio{
+                    id_deporte: Some(3),
+                    id_categoria: 3,
+                    dni: 5432,
+                    account: accounts.alice,
+                    nombre: Alicia,
+                    pagos: Vec::new(),
+                };
+                let un_pago = Pago::new(500_000_000, Categoria::A, 5000, false, true, false, None);
+                socio1.pagos.push(un_pago);
+                socio1.generar_recibos();
+            }
+		
              #[ink::test]
             fn cambiar_categoria_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
