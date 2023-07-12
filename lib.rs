@@ -240,6 +240,7 @@ mod gestor_de_cobros {
             let result_10 = gestor.date_to_timestamp(10, 2023);
             let result_11 = gestor.date_to_timestamp(11, 2023);
             let result_12 = gestor.date_to_timestamp(12, 2023);
+            let result_2100 = gestor.date_to_timestamp(10, 2100);
 
             assert_eq!(result_1, 1_672_531_200_000);
             assert_eq!(result_2, 1_675_209_600_000);
@@ -255,7 +256,8 @@ mod gestor_de_cobros {
             assert_eq!(result_10, 1_696_118_400_000);
             assert_eq!(result_11, 1_698_796_800_000);
             assert_eq!(result_12, 1_701_388_800_000);
-            
+            assert_eq!(result_2100, 4_126_032_000_000);
+
         }
 
         #[ink::test]
