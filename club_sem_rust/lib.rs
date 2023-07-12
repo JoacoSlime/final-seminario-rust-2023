@@ -710,7 +710,7 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn set_descuento(&mut self, descuento: u128) {
             if self.esta_habilitada(self.env().caller()){
-                if descuento > 101  {
+                if descuento > 100  {
                     panic!("EL PORCENTAJE DE DESCUENTO INGRESADO ESTÁ MAL!"); // panics!
                 } else {
             		self.descuento = descuento;
@@ -1101,6 +1101,28 @@ mod club_sem_rust {
             }
             
             #[ink::test]
+            #[should_panic(expected = "EL PORCENTAJE DE DESCUENTO INGRESADO ESTÁ MAL!")]
+            fn set_descuento_test_panic_value() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let mut club = ClubSemRust::default();
+                club.set_descuento(101);
+            }
+
+            #[ink::test]
+            #[should_panic(expected = "No está habilitado para realizar esta operación.")]
+            fn set_descuento_test_panic_permissions() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let mut club = ClubSemRust::default();
+                club.flip_bloqueo();
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+                club.set_descuento(25);
+            }
+
+            #[ink::test]
             fn registrar_nuevo_socio_test() {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
@@ -1160,6 +1182,17 @@ mod club_sem_rust {
                 resultado.registrar_nuevo_socio("Roberto".to_string(), 45045045,accounts.bob, 2, Some(5));
                 
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::registrar_nuevo_socio(), se esperaba {:#?} y se recibió {:#?}", esperado, resultado);
+            }
+
+            #[should_panic(expected = "No está habilitado para realizar esta operación.")]
+            #[ink::test]
+            fn registrar_nuevo_socio_test_panic() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.frank);
+                let mut club = ClubSemRust::default();
+                club.flip_bloqueo();
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.django);
+                club.registrar_nuevo_socio("Juancito".to_string(), 44044044, accounts.django, 3, None);
             }
             
             #[ink::test]
