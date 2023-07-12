@@ -1055,12 +1055,12 @@ mod club_sem_rust {
                     esta_bloqueado: false
                 };
                 let mut resultado = ClubSemRust::new(25, 999, 400, 300, 200, 10);
-                resultado.set_precio_categoria(10000, 2);
+                 resultado.set_precio_categoria(10000, 2);
                 assert_eq!(resultado.precio_categorias[1], 10000);
                 resultado.set_precio_categoria(20000, 3);
-                assert_eq!(resultado.precio_categoria[2], 20000);
+                assert_eq!(resultado.precio_categorias[2], 20000);
                 resultado.set_precio_categoria(1, 50000);
-                assert_eq!(resultado.precio_categoria[0], 5000);
+                assert_eq!(resultado.precio_categorias[0], 5000);
 
             }
 
