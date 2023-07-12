@@ -622,6 +622,14 @@ mod club_sem_rust {
             club
         }
 	    
+        
+        /// Crea un club con valores por defecto arbitrarios.
+        #[ink(constructor)]
+        pub fn default() -> Self {
+            // 864_000_000 es 10 días 
+            Self::new(15, 864_000_000, 5000, 3000, 2000, 3)
+        }
+        
         /// Transfiere la cuenta de un owner a otro pasado por parámetro
         /// 
         /// # Panics
@@ -639,14 +647,7 @@ mod club_sem_rust {
                 self.owner = Some(caller);
             }
         }
-
-        /// Crea un club con valores por defecto arbitrarios.
-        #[ink(constructor)]
-        pub fn default() -> Self {
-            // 864_000_000 es 10 días 
-            Self::new(15, 864_000_000, 5000, 3000, 2000, 3)
-        }
-
+        
         /// Setea un nuevo precio de matricula mensual para cierta categoria.
         ///
         /// # Panics
@@ -1966,6 +1967,78 @@ mod club_sem_rust {
                 assert!(club.esta_habilitada(accounts.alice));
                 assert!(club.esta_habilitada(accounts.bob));
                 assert!(club.esta_habilitada(owner));
+            }
+
+            #[ink::test]
+            fn transfer_account_test(){
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let esperado1 = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: Some(owner),
+                    cuentas_habilitadas: Vec::from([
+                        accounts.alice,
+                        accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                let esperado2 = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: Some(accounts.alice),
+                    cuentas_habilitadas: Vec::from([
+                        accounts.alice,
+                        accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                let mut club = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: None,
+                    cuentas_habilitadas: Vec::from([
+                        accounts.alice,
+                        accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                club.transfer_account(None);
+                assert_eq!(esperado1, club);
+                club.transfer_account(Some(accounts.alice));
+                assert_eq!(esperado2, club);
+            }
+
+            #[should_panic(expected = "NO ES EL OWNER")]
+            #[ink::test]
+            fn transfer_account_test_panic() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let mut club = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: Some(accounts.alice),
+                    cuentas_habilitadas: Vec::from([
+                        accounts.alice,
+                        accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                club.transfer_account(Some(owner));
             }
         }
             
