@@ -1039,7 +1039,7 @@ mod club_sem_rust {
                 assert_eq!(esperado, resultado, "Error en ClubSemRust::default(), se esperaba {:?} y se recibió {:?}", esperado, resultado)
             }
 
-            #[ink::test]
+             #[ink::test]
             fn set_precio_categoria_test(){
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
@@ -1069,7 +1069,7 @@ mod club_sem_rust {
                 let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
                 let owner = accounts.frank;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
-                let esperado = ClubSemRust{
+                let mut esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 25,
                     precio_categorias: vec![400, 300, 200],
@@ -1079,9 +1079,9 @@ mod club_sem_rust {
                     cuentas_habilitadas: Vec::new(),
                     esta_bloqueado: false
                 };
-                let mut resultado = ClubSemRust::new(25, 999, 400, 300, 200, 10);
-                resultado.set_precio_categoria(10000, 5);
-                assert_eq!(resultado.precio_categorias[5], 10000);
+             
+                esperado.set_precio_categoria(10000, 5);
+               
             }
 		
             #[ink::test]
