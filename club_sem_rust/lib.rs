@@ -737,9 +737,9 @@ mod club_sem_rust {
         #[ink(message)]
         pub fn registrar_nuevo_socio(&mut self, nombre: String, dni:u32, account: AccountId, id_categoria: u32, id_deporte: Option<u32>) {
             if self.esta_habilitada(self.env().caller()){
-                let hoy = self.env().block_timestamp().checked_add(self.duracion_deadline).expect("Overflow en la suma de tiempo");
+                let vencimiento = self.env().block_timestamp().checked_add(self.duracion_deadline).expect("Overflow en la suma de tiempo");
                 let precios = self.precio_categorias.clone();
-                let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, hoy, precios);
+                let socio = Socio::new(nombre, dni, account, id_categoria, id_deporte, vencimiento, precios);
                 self.socios.push(socio);
             }else{
                 panic!("No está habilitado para realizar esta operación.")
@@ -762,7 +762,7 @@ mod club_sem_rust {
         pub fn registrar_pago_dni(&mut self, dni: u32, monto: u128) {
             let hoy = self.env().block_timestamp();
             let precios = self.precio_categorias.clone();
-            let deadline: Timestamp = hoy.checked_add(self.get_duracion_deadline()).expect("Overflow en la suma de tiempo");
+            let deadline: Timestamp = self.get_duracion_deadline();
             if self.esta_habilitada(self.env().caller()) {
                 if self.socios.len() > 0{
                     if let Some(socio) = self.socios.iter_mut().find(|s| s.dni == dni){
@@ -818,7 +818,7 @@ mod club_sem_rust {
         /// - En caso de que el pago ya estuviera registrado.
         #[ink(message, payable)]
         pub fn pagar(&mut self) {
-            let monto = self.env().transferred_value();
+            let monto: Balance = self.env().transferred_value();
             let cuenta = self.env().caller();
             self.registrar_pago_account(cuenta, monto);
         }
@@ -1268,7 +1268,7 @@ mod club_sem_rust {
                                     fecha_pago: Some(now),
                                 },
                                 Pago{
-                                    vencimiento: 864_000_000 * 2 + now * 2,
+                                    vencimiento: 864_000_000 * 2 + now,
                                     categoria: Categoria::C,
                                     monto: 2000,
                                     pendiente: true,
