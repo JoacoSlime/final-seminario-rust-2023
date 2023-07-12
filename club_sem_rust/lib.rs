@@ -1047,7 +1047,7 @@ mod club_sem_rust {
                 let esperado = ClubSemRust{
                     socios: Vec::new(),
                     descuento: 25,
-                    precio_categorias: vec![50000, 20000, 10000],
+                    precio_categorias: vec![50000, 10000, 20000],
                     duracion_deadline: 999,
                     pagos_consecutivos_bono: 10,
                     owner: Some(owner),
