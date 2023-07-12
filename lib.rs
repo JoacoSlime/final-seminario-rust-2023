@@ -137,8 +137,7 @@ mod gestor_de_cobros {
         /// 
         ///  - No funciona para fechas más antiguas que el Epoch de Unix (1ro de Enero, 1970).
         ///  - Se debe ingresar un mes del 1 al 12, devuelve panic si se ingresa un número por fuera de este rango.
-        #[ink(message)]
-        pub fn date_to_timestamp(&self, mes:u64, año:u64) -> Timestamp {
+        fn date_to_timestamp(&self, mes:u64, año:u64) -> Timestamp {
             if mes < 1 || mes > 12{
                 panic!("El número de mes enviado no es válido");
             }
@@ -182,8 +181,7 @@ mod gestor_de_cobros {
             }
         }
 
-        #[ink(message)]
-        pub fn es_bisiesto(&self, año:u16) -> bool {
+        fn es_bisiesto(&self, año:u16) -> bool {
             if año %4 !=0 {
                 return false;
             }else{
@@ -211,7 +209,7 @@ mod gestor_de_cobros {
 
         use super::GestorDeCobros;
 
-        #[ink::test]
+        #[test]
         #[should_panic(expected = "La fecha ingresada es menor que la Unix epoch (1ro de Enero, 1970)")]
         pub fn test_panic_date_to_timestamp(){
             let gestor = GestorDeCobros::new();
@@ -219,7 +217,7 @@ mod gestor_de_cobros {
             gestor.date_to_timestamp(1, 1969);
         }
 
-        #[ink::test]
+        #[test]
         #[should_panic(expected = "El número de mes enviado no es válido")]
         pub fn test_panic_mes_date_to_timestamp(){
             let gestor = GestorDeCobros::new();
@@ -227,7 +225,7 @@ mod gestor_de_cobros {
             gestor.date_to_timestamp(13, 2000);
         }
 
-        #[ink::test]
+        #[test]
         pub fn test_date_to_timestamp(){
             let gestor = GestorDeCobros::new();
 
@@ -245,6 +243,7 @@ mod gestor_de_cobros {
             let result_10 = gestor.date_to_timestamp(10, 2023);
             let result_11 = gestor.date_to_timestamp(11, 2023);
             let result_12 = gestor.date_to_timestamp(12, 2023);
+            let result_2100 = gestor.date_to_timestamp(10, 2100);
 
             assert_eq!(result_1, 1_672_531_200_000);
             assert_eq!(result_2, 1_675_209_600_000);
@@ -260,7 +259,8 @@ mod gestor_de_cobros {
             assert_eq!(result_10, 1_696_118_400_000);
             assert_eq!(result_11, 1_698_796_800_000);
             assert_eq!(result_12, 1_701_388_800_000);
-            
+            assert_eq!(result_2100, 4_126_032_000_000);
+
         }
 
         #[ink::test]
