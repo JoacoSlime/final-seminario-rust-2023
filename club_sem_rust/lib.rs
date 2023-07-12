@@ -819,11 +819,13 @@ mod club_sem_rust {
         }
 
         /// Permite al usuario pagar manualmente.
+        /// (PROOF OF CONCEPT)
         /// 
         /// # Panics:
         /// 
         /// - En caso de que el usuario no esté registrado.
         /// - En caso de que el pago ya estuviera registrado.
+        /// - En caso de que haya un descuento que cause tokens con punto fijo. ("Monto incorrecto.")
         #[ink(message, payable)]
         pub fn pagar(&mut self) {
             let monto: Balance = self.env().transferred_value();
@@ -903,7 +905,32 @@ mod club_sem_rust {
                 None => panic!("NO HAY OWNER!"),
             }
         }
-        
+                
+        /// Agrega una cuenta al vector de cuentas habilitadas.
+        /// 
+        /// # Panics
+        /// 
+        /// Puede ocurrir un panic en caso de que:
+        /// - No sea owner el caller.
+        /// - No haya owner.
+        /// - No exista la cuenta
+        #[ink(message)]
+        pub fn quitar_cuenta(&mut self, id: AccountId) {
+            match self.owner{
+                Some(o) => {
+                    if self.env().caller() == o {
+                        let cuenta = self.cuentas_habilitadas.iter().position(|c| *c == id);
+                        match cuenta {
+                            Some(i) => self.cuentas_habilitadas.remove(i),
+                            None => panic!("Esta cuenta no se encuentra entre las habilitadas."),
+                        };
+                    } else {
+                        panic!("El caller no es el owner.");
+                    }
+                },
+                None => panic!("NO HAY OWNER!"),
+            }
+        }
         
         /// Bloquea la estructura para que solo pueda ser modificada por las cuentas habilitadas o el owner
         #[ink(message)]
@@ -1991,6 +2018,106 @@ mod club_sem_rust {
                     esta_bloqueado: false
                 };
                 club.agregar_cuenta(accounts.alice);
+            }
+
+            
+            
+            #[ink::test]
+            fn quitar_cuenta_test() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                let canon = 1_000_000_000_000;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let esperado = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5*canon, 3*canon, 2*canon],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: Some(owner.clone()),
+                    cuentas_habilitadas: Vec::from([
+                            accounts.alice,
+                    ]),
+                    esta_bloqueado: false
+                };
+                let mut resultado = ClubSemRust::default();
+                assert_ne!(resultado, esperado);
+                resultado.agregar_cuenta(accounts.alice);
+                resultado.agregar_cuenta(accounts.bob);
+                assert_ne!(resultado, esperado);
+                resultado.quitar_cuenta(accounts.bob);
+                assert_eq!(resultado, esperado, "Error en ClubSemRust::agregar_cuenta(), se esperaba {:?} y se recibió {:?}", esperado, resultado);
+            }
+
+            
+            
+            #[ink::test]
+            #[should_panic(expected = "NO HAY OWNER!")]
+            fn quitar_cuenta_panic_no_owner_test() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let mut club = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: None,
+                    cuentas_habilitadas: Vec::from([
+                            accounts.alice,
+                            accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                club.quitar_cuenta(accounts.alice);
+            }
+            
+            #[ink::test]
+            #[should_panic(expected = "El caller no es el owner.")]
+            fn quitar_cuenta_panic_permission_test() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let mut club = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: Some(owner),
+                    cuentas_habilitadas: Vec::from([
+                            accounts.alice,
+                            accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+                club.quitar_cuenta(accounts.alice);
+            }
+
+            
+            
+            #[ink::test]
+            #[should_panic(expected = "Esta cuenta no se encuentra entre las habilitadas.")]
+            fn quitar_cuenta_panic_does_not_exists_test() {
+                let accounts: ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> = ink::env::test::default_accounts();
+                let owner = accounts.frank;
+                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(owner.clone());
+                let mut club = ClubSemRust{
+                    socios: Vec::new(),
+                    descuento: 15,
+                    precio_categorias: vec![5000, 3000, 2000],
+                    duracion_deadline: 864_000_000,
+                    pagos_consecutivos_bono: 3,
+                    owner: Some(owner),
+                    cuentas_habilitadas: Vec::from([
+                            accounts.alice,
+                            accounts.bob,
+                    ]),
+                    esta_bloqueado: false
+                };
+                club.quitar_cuenta(accounts.frank);
             }
                 
             #[ink::test]
